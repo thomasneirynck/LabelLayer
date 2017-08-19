@@ -108,15 +108,21 @@
         _tx: 0,
         _ty: 0,
 
-        scaleOnPoint(sx, sy, pX, pY) {
+        scaleOnPoint(sx, sy, vX, vY) {
 
-            let nsx = this._sx * sx;
-            let ntx = pX / (nsx * pX);
+            let nsx = this._sx * sx
+            let wx = this.toWorldX(vX);
+            let ntx = vX - (nsx * wx);
+
+            //vX = this._sX * wx + this._tx;
+            //vX = nsx * wx + ntx;
             let nsy = this._sy * sy;
-            let nty = pY / (nsx * pY);
+            let wy = this.toWorldY(vY);
+            let nty = vY - (nsy * wy);
 
-            this._tx -= ntx;
-            this._ty -= nty;
+
+            this._tx = ntx;
+            this._ty = nty;
 
             this._sx = nsx;
             this._sy = nsy;
@@ -164,7 +170,7 @@
 
     wrapper.addEventListener('mousemove', function (event) {
         if (down) {
-            console.log('do pan');
+//            console.log('do pan');
             transformation.translate(event.clientX - lastX, event.clientY - lastY);
         }
         lastX = event.clientX;
@@ -180,11 +186,14 @@
 
         raf = requestAnimationFrame(function draw() {
 
+//            console.log(transformation);
 
             raf = -1;
 
             data.forEach(function (l) {
-
+                if (!l.labelHandle) {
+                    return;
+                }
                 labelLayer.moveLabel(l.labelHandle, transformation.toViewX(l.x), transformation.toViewY(l.y));
             })
 
@@ -194,14 +203,17 @@
             const toX = transformation.toWorldX(canvas.width);
             const y = transformation.toWorldY(canvas.height);
 
-            const results = index.search(x, y, toX - x, tY  - y);
+            const results = index.search(x, y, toX - x, tY - y);
+//            results.length = 1;
+
+//            console.log(results.length);
 
             context2d.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < results.length; i++) {
                 const city = results[i];
                 const x = transformation.toViewX(city.x);
                 const y = transformation.toViewY(city.y);
-
+//                console.log( y, city.y, transformation._sy, transformation._ty);
                 context2d.beginPath();
                 context2d.arc(x, y, 10, 0, Math.PI * 2);
                 context2d.fillStyle = 'rgba(175,105,105,0.1)';
@@ -220,15 +232,11 @@
         let cx = event.clientX;
         let cy = event.clientY;
         let count = 1;
-        let size = 1.01;
+        let size = 1.05;
         let thing = event.wheelDelta >= 0 ? size : 1 / size;
-        requestAnimationFrame(function zoom() {
-            transformation.scaleOnPoint(thing, thing, cx, cy);
-            if (count > 0) {
-                count--;
-                requestAnimationFrame(zoom);
-            }
-        });
+
+        console.log(cx,cy);
+        transformation.scaleOnPoint(thing, thing, cx, cy);
     });
     invalidate();
 </script>
