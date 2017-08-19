@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LabelLayer Demo</title>
+    <style> body, html {
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+    }
+
+    #wrapper {
+        overflow: hidden;
+        position: relative;
+        margin: 0 auto;
+        width: 100%;
+        height: 100%;
+        border: 1px solid red;
+        user-select: none;
+    }
+
+    .label {
+        overflow: hidden;
+        color: white;
+        background-color: dimgrey;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 10px;
+    }
+
+    canvas {
+        border: 1px solid green;
+    }
+
+    #docs {
+        background-color: rgba(240, 240, 240, 0.9);
+        position: absolute;
+        z-index: 10;
+        right: 0;
+        top: 0;
+        padding: 10px; /*height: 100%;*/
+        max-width: 30%;
+        margin: 4px;
+        display: inline-block;
+        overflow: scroll;
+        user-select: none;
+    }
+
+    #template {
+        width: 90%;
+        height: 100px;
+        margin: 2px auto;
+    }
+
+    strong { /*color: darkblue;*/
+        font-size: 2em;
+    }
+
+    #instructions {
+        background-color: rgba(240, 240, 240, 0.9);
+        position: absolute;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        padding: 10px;
+        margin: 4px;
+    } </style>
+</head>
+<body>
+<div id="instructions"> dgfhg</div>
+<div id="docs"><h1>LabelLayer</h1></div>
+<div id="wrapper"></div>
+<script src="data/cities_trim_small.js"></script>
+<script src="dist/LabelLayer.js"></script>
+<script src="lib/RTree2d.js"></script>
+<script>
+    const wrapper = document.getElementById('wrapper');
+    const canvas = document.createElement('canvas');
+    canvas.width = wrapper.clientWidth;
+    canvas.height = wrapper.clientHeight;
+    canvas.style.position = 'absolute';
+    canvas.style.top = 0;
+    canvas.style.left = 0;
+    wrapper.appendChild(canvas);
+    const context2d = canvas.getContext('2d');
+    const data = cities.map((c) => {
+        return {
+            x: c[1], y: c[2], pop: c[3], name: c[0], labelHandle: null
+        };
+    });
+
+
+    const index = new RTree2d();
+
+    const labelLayer = new LabelLayer(wrapper);
+
+    data.forEach(function (d) {
+        index.insert(d, d.x, d.y, 1, 1);
+        const label = `<div class="label">${d.name + ": " + d.pop}</div>`;
+        d.labelHandle = labelLayer.createLabel(d.x, d.y, label, d.pop);
+    });
+
+
+    const transformation = {
+
+        _sx: 1,
+        _sy: -1,
+        _tx: 0,
+        _ty: 0,
+
+        scaleOnPoint(sx, sy, pX, pY) {
+
+            let nsx = this._sx * sx;
+            let ntx = pX / (nsx * pX);
+            let nsy = this._sy * sy;
+            let nty = pY / (nsx * pY);
+
+            this._tx -= ntx;
+            this._ty -= nty;
+
+            this._sx = nsx;
+            this._sy = nsy;
+
+            invalidate();
+        },
+
+        translate(dx, dy){
+            this._tx += dx;
+            this._ty += dy;
+            invalidate();
+        },
+
+        toViewX(x){
+            return this._sx * x + this._tx;
+        },
+
+        toViewY(y){
+            return this._sy * y + this._ty;
+        },
+
+        toWorldX(x){
+            return (x - this._tx) / this._sx;
+        },
+
+        toWorldY(y){
+            return (y - this._ty) / this._sy;
+        }
+    };
+
+
+    let down = false;
+    let lastX = 0;
+    let lastY = 0;
+    wrapper.addEventListener('mousedown', function (event) {
+        down = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+    });
+
+    wrapper.addEventListener('mouseup', function () {
+        down = false;
+    });
+
+
+    wrapper.addEventListener('mousemove', function (event) {
+        if (down) {
+            console.log('do pan');
+            transformation.translate(event.clientX - lastX, event.clientY - lastY);
+        }
+        lastX = event.clientX;
+        lastY = event.clientY;
+    });
+
+    let raf = -1;
+    function invalidate() {
+
+        if (raf !== -1) {
+            return;
+        }
+
+        raf = requestAnimationFrame(function draw() {
+
+
+            raf = -1;
+
+            data.forEach(function (l) {
+
+                labelLayer.moveLabel(l.labelHandle, transformation.toViewX(l.x), transformation.toViewY(l.y));
+            })
+
+            //draw cities
+            const x = transformation.toWorldX(0);
+            const tY = transformation.toWorldY(0);
+            const toX = transformation.toWorldX(canvas.width);
+            const y = transformation.toWorldY(canvas.height);
+
+            const results = index.search(x, y, toX - x, tY  - y);
+
+            context2d.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < results.length; i++) {
+                const city = results[i];
+                const x = transformation.toViewX(city.x);
+                const y = transformation.toViewY(city.y);
+
+                context2d.beginPath();
+                context2d.arc(x, y, 10, 0, Math.PI * 2);
+                context2d.fillStyle = 'rgba(175,105,105,0.1)';
+                context2d.fill();
+            }
+
+        });
+    }
+
+    window.addEventListener('resize', function () {
+        canvas.width = wrapper.clientWidth;
+        canvas.height = wrapper.clientHeight;
+    });
+
+    window.addEventListener('mousewheel', function (event) {
+        let cx = event.clientX;
+        let cy = event.clientY;
+        let count = 1;
+        let size = 1.01;
+        let thing = event.wheelDelta >= 0 ? size : 1 / size;
+        requestAnimationFrame(function zoom() {
+            transformation.scaleOnPoint(thing, thing, cx, cy);
+            if (count > 0) {
+                count--;
+                requestAnimationFrame(zoom);
+            }
+        });
+    });
+    invalidate();
+</script>
+
+
+</body>
+</html>

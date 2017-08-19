@@ -729,7 +729,6 @@ class LabelLayer extends LinkedListNode {
       this._rafHandle = -1;
       const bef = Date.now();
       this._updateStateOfAllLabels();
-      console.log('timing: ', Date.now() - bef);
     });
   }
 
