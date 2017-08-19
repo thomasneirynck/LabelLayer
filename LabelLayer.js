@@ -819,9 +819,7 @@ class LabelLayer extends LinkedListNode {
     }
     this._rafHandle = requestAnimationFrame(() => {
       this._rafHandle = -1;
-      const bef = Date.now();
       this._updateStateOfAllLabels();
-      // console.log('time', Date.now() - bef);
     });
   }
 
@@ -849,115 +847,109 @@ class LabelLayer extends LinkedListNode {
 
   _updateStateOfAllLabels() {
 
-
-//            console.log('update state---');
-//            console.log(this._dumpLabelList('_status'));
-    //decide what to do with each label (greedy)con
-
     //swap the grids. this is backwards. should just copy over elements...
-    const tmp = this._gridBack;
-    this._gridBack = this._gridFront;
-    this._gridFront = tmp;
-    this._gridFront.clearGrid();
+    try {
+      const tmp = this._gridBack;
+      this._gridBack = this._gridFront;
+      this._gridFront = tmp;
+      this._gridFront.clearGrid();
 
-    let previousNode = this;
-    let label = previousNode.getNextNode();
-
-
-    //todo keep track of first unintialized label or dirty label. this will trigger if we need to reposition
-    let shouldCheckForConflicts = false;
-    while (label) {
-
-      const labelStatus = label.getStatus();
-      const shouldRemove = label.getShouldRemove();
-
-      shouldCheckForConflicts = shouldCheckForConflicts ||
-      labelStatus === STATUS.NOT_INITIALIZED ||
-      (labelStatus === STATUS.ON_SCREEN && label.isDirty()) ||
-      (labelStatus === STATUS.OFF_SCREEN && label.isDirty());
+      let previousNode = this;
+      let label = previousNode.getNextNode();
 
 
-      //mark the comp-label to null
+      //todo keep track of first unintialized label or dirty label. this will trigger if we need to reposition
+      let shouldCheckForConflicts = false;
+      while (label) {
+
+        const labelStatus = label.getStatus();
+        const shouldRemove = label.getShouldRemove();
+
+        shouldCheckForConflicts = shouldCheckForConflicts ||
+        labelStatus === STATUS.NOT_INITIALIZED ||
+        (labelStatus === STATUS.ON_SCREEN && label.isDirty()) ||
+        (labelStatus === STATUS.OFF_SCREEN && label.isDirty());
+
+
+        //mark the comp-label to null
 //                label.setTmpLabelComp(null);
-      label.clearLastCompLabel();
-      label.unhookAllCells();
+        label.clearLastCompLabel();
+        label.unhookAllCells();
 
-      if (shouldRemove) {
-        const nextLabel = label.getNextNode();
-        label.setNextNode(null);
-        previousNode.setNextNode(nextLabel);
-        if (labelStatus === STATUS.ON_SCREEN) {
-          label.setStatus(STATUS.OFF_SCREEN);
-          this._labelsToRemoveFromDOM.push(label);
-        }
-        label = nextLabel;
-      } else {
-        if (labelStatus === STATUS.NOT_INITIALIZED) {
-          label.measure(this._measureDiv);
-          if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
-            label.setStatus(STATUS.ON_SCREEN);
-            this._labelsToAddToDOM.push(label);
-          } else {
-            label.setStatus(STATUS.OFF_SCREEN);
-          }
-        } else if (labelStatus === STATUS.OFF_SCREEN) {
-          //check if can add
-          if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
-            label.setStatus(STATUS.ON_SCREEN);
-            this._labelsToAddToDOM.push(label);
-          }
-        } else if (labelStatus === STATUS.ON_SCREEN) {
-          if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
-            if (label.isDirty()) {
-              this._labelsToChangePositionForInDOM.push(label);
-              label.unDirtyPosition();
-            }
-          } else {
+        if (shouldRemove) {
+          const nextLabel = label.getNextNode();
+          label.setNextNode(null);
+          previousNode.setNextNode(nextLabel);
+          if (labelStatus === STATUS.ON_SCREEN) {
             label.setStatus(STATUS.OFF_SCREEN);
             this._labelsToRemoveFromDOM.push(label);
           }
+          label = nextLabel;
+        } else {
+          if (labelStatus === STATUS.NOT_INITIALIZED) {
+            label.measure(this._measureDiv);
+            if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
+              label.setStatus(STATUS.ON_SCREEN);
+              this._labelsToAddToDOM.push(label);
+            } else {
+              label.setStatus(STATUS.OFF_SCREEN);
+            }
+          } else if (labelStatus === STATUS.OFF_SCREEN) {
+            //check if can add
+            if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
+              label.setStatus(STATUS.ON_SCREEN);
+              this._labelsToAddToDOM.push(label);
+            }
+          } else if (labelStatus === STATUS.ON_SCREEN) {
+            if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
+              if (label.isDirty()) {
+                this._labelsToChangePositionForInDOM.push(label);
+                label.unDirtyPosition();
+              }
+            } else {
+              label.setStatus(STATUS.OFF_SCREEN);
+              this._labelsToRemoveFromDOM.push(label);
+            }
+          }
+
+          label.clearLastCompLabel();
+          previousNode = label;
+          label = label.getNextNode();
         }
-
-        label.clearLastCompLabel();
-        previousNode = label;
-        label = label.getNextNode();
       }
+
+      let labelToRemove = this._labelsToRemoveFromDOM.pop();
+      while (labelToRemove) {
+        this._labelDiv.removeChild(labelToRemove.getDOMDiv());
+        const div = labelToRemove.removeDomDivReference();
+        this._divPool.returnDiv(div);
+        labelToRemove = this._labelsToRemoveFromDOM.pop();
+      }
+
+      let labelToAdd = this._labelsToAddToDOM.pop();
+      while (labelToAdd) {
+        const div = this._divPool.getDiv();
+        labelToAdd.setDomDiv(div);
+        div.style.left = labelToAdd.getViewX() + 'px';
+        div.style.top = labelToAdd.getViewY() + 'px';
+        div.style.width = labelToAdd.getWidth() + 1 + 'px';//ugh, how to measure borders?
+        div.style.height = labelToAdd.getHeight() + 1 + 'px';//ugh, how to measure borders?
+        this._labelDiv.appendChild(div);
+        labelToAdd = this._labelsToAddToDOM.pop();
+      }
+
+      let labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
+      while (labelToChangePositionFor) {
+        const div = labelToChangePositionFor.getDOMDiv();
+        div.style.left = labelToChangePositionFor.getViewX() + 'px';
+        div.style.top = labelToChangePositionFor.getViewY() + 'px';
+        labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
+      }
+
+    } catch (e) {
+      console.log('LabelLayer crashes');
+      console.error(e);
     }
-
-    let labelToRemove = this._labelsToRemoveFromDOM.pop();
-    while (labelToRemove) {
-      this._labelDiv.removeChild(labelToRemove.getDOMDiv());
-      const div = labelToRemove.removeDomDivReference();
-      this._divPool.returnDiv(div);
-      labelToRemove = this._labelsToRemoveFromDOM.pop();
-    }
-
-    let labelToAdd = this._labelsToAddToDOM.pop();
-    while (labelToAdd) {
-
-//                const div = document.createElement('div');
-      const div = this._divPool.getDiv();
-//                div.style.transition = 'left 0.1s, top 0.1s';
-//                div.style.transition = 'left 0.2s, top 0.2s';
-      labelToAdd.setDomDiv(div);
-      div.style.left = labelToAdd.getViewX() + 'px';
-      div.style.top = labelToAdd.getViewY() + 'px';
-      div.style.width = labelToAdd.getWidth() + 1 + 'px';//ugh, how to measure borders?
-      div.style.height = labelToAdd.getHeight() + 1 + 'px';//ugh, how to measure borders?
-      this._labelDiv.appendChild(div);
-      labelToAdd = this._labelsToAddToDOM.pop();
-    }
-
-    let labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
-    while (labelToChangePositionFor) {
-      const div = labelToChangePositionFor.getDOMDiv();
-      div.style.left = labelToChangePositionFor.getViewX() + 'px';
-      div.style.top = labelToChangePositionFor.getViewY() + 'px';
-      labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
-    }
-
-//            console.log(this._dumpLabelList('_status'));
-
   }
 
   /**
