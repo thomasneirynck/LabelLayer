@@ -576,7 +576,6 @@ class Grid {
 }
 
 
-// class LabelLayer extends SingleLinkedListNode {
 class LabelLayer extends DoublyLinkedListNode {
 
   constructor(container, options) {
@@ -706,6 +705,51 @@ class LabelLayer extends DoublyLinkedListNode {
     return visibleLabels;
   }
 
+  // setLabels(labelIterator) {
+  //
+  //   // const newHead = new LinkedListNode();
+  //
+  //   let newHead = null;
+  //   labelIterator.forEach((labelConfig) => {
+  //     let label;
+  //     if (!labelConfig.labelHandle) {
+  //       const anchorGenerator = new MultiAnchorGenerator(labelConfig.x, labelConfig.y);
+  //       label = new Label(this, labelConfig.contents, anchorGenerator);
+  //       label.setStatus(STATUS.NOT_INITIALIZED);
+  //       label.setPriority(labelConfig.priority);
+  //     } else {
+  //       //detach from the old linked list and add to the new one
+  //       // console.log('dont recreate');
+  //       label = labelConfig.labelHandle;
+  //       label.dirtyPosition(labelConfig.x, labelConfig.y);
+  //     }
+  //     label._nextNode = null;
+  //     newHead = SingleLinkedListNode.addTolinkedList(newHead, label);
+  //     return label;
+  //   });
+  //
+  //
+  //   //remove all the left-over nodes
+  //   let nodeToRemove = this._nextNode;
+  //   while (nodeToRemove) {
+  //
+  //     if (nodeToRemove.getStatus() === STATUS.ON_SCREEN) {
+  //       nodeToRemove.setStatus(STATUS.OFF_SCREEN);
+  //       this._labelsToRemoveFromDOM.push(nodeToRemove);
+  //     }
+  //     let next = nodeToRemove._nextNode;
+  //     nodeToRemove.setNextNode(null);
+  //     nodeToRemove = next;
+  //   }
+  //
+  //   //use the new linked list as the new state
+  //   this.setNextNode(newHead);
+  //
+  //   //update the screen
+  //   this._updateStateOfAllLabels();
+  //
+  // }
+
   paint() {
     this._updateStateOfAllLabels();
   }
@@ -714,6 +758,55 @@ class LabelLayer extends DoublyLinkedListNode {
     out.x = labelHandle.getViewX() + labelHandle._width / 2;
     out.y = labelHandle.getViewY() + labelHandle._height / 2;
   }
+
+
+  // changeLabelPriority(labelToMove, newPriority) {
+  //
+  //   if (labelToMove.getPriority() === newPriority) {
+  //     return;
+  //   }
+  //
+  //   let previousNode = this;
+  //   let node = previousNode._nextNode;
+  //
+  //   let nodeBeforeTarget = null;
+  //   let nodeToInsertOn = null;
+  //
+  //   while (node) {
+  //
+  //     if (node === labelToMove) {
+  //       nodeBeforeTarget = previousNode;
+  //     }
+  //     const nextNode = node._nextNode;
+  //     const foundInsertionNode = !nodeToInsertOn && (nextNode === null || node.getPriority() <= newPriority);
+  //     if (foundInsertionNode) {
+  //       nodeToInsertOn = previousNode;
+  //     }
+  //
+  //     if (nodeBeforeTarget && nodeToInsertOn) {
+  //       if (labelToMove !== nodeToInsertOn) {
+  //         //remove the node
+  //         const nextAfterTarget = labelToMove._nextNode;
+  //         labelToMove.setNextNode(null);
+  //         nodeBeforeTarget.setNextNode(nextAfterTarget);
+  //
+  //         //and insert into new position
+  //         const next = nodeToInsertOn._nextNode;
+  //         labelToMove.setNextNode(next);
+  //         nodeToInsertOn.setNextNode(labelToMove);
+  //
+  //       }
+  //       break;
+  //     }
+  //
+  //     previousNode = node;
+  //     node = previousNode._nextNode;
+  //
+  //   }
+  //
+  //   labelToMove.setPriority(newPriority);
+  //   this._invalidate();
+  // }
 
   _drawGrid(context) {
     this._gridFront.draw(context);
@@ -881,7 +974,9 @@ class LabelLayer extends DoublyLinkedListNode {
 
 
   _addToAllLabelList(labelToAdd) {
+    // const newHead = SingleLinkedListNode.addTolinkedList(this._nextNode, labelToAdd);
     this._nextNodeDLL = DoublyLinkedListNode.addToList(this._nextNodeDLL, labelToAdd);
+    // this.setNextNode(newHead);
   }
 
   _createCellsForLabel(width, height, label) {

@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6c624b6c-f600-4f32-bb3e-cce20c9ea279" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/data/dodata.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LabelLayer.js" afterPath="$PROJECT_DIR$/LabelLayer.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/labeler.iml" afterPath="$PROJECT_DIR$/labeler.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/world.html" afterPath="$PROJECT_DIR$/world.html" />
     </list>
     <ignored path="labeler.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -104,8 +98,8 @@
       <file leaf-file-name="LabelLayer.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/LabelLayer.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="238">
-              <caret line="884" column="3" selection-start-line="884" selection-start-column="3" selection-end-line="884" selection-end-column="3" />
+            <state relative-caret-position="18">
+              <caret line="181" column="0" selection-start-line="181" selection-start-column="0" selection-end-line="181" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -794,12 +788,12 @@
       <workItem from="1503078943211" duration="15773000" />
       <workItem from="1503106716443" duration="11325000" />
       <workItem from="1503121388329" duration="9932000" />
-      <workItem from="1503153306805" duration="7109000" />
+      <workItem from="1503153306805" duration="7236000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="113591000" />
+    <option name="totallyTimeSpent" value="113718000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1312" y="52" width="1248" height="1388" extended-state="4" />
@@ -1277,8 +1271,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/LabelLayer.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="884" column="3" selection-start-line="884" selection-start-column="3" selection-end-line="884" selection-end-column="3" />
+        <state relative-caret-position="18">
+          <caret line="181" column="0" selection-start-line="181" selection-start-column="0" selection-end-line="181" selection-end-column="0" />
           <folding />
         </state>
       </provider>
