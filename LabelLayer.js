@@ -1,4 +1,3 @@
-//todo: replace with ints for faster comparison
 const STATUS = {
   NOT_INITIALIZED: 0,
   ON_SCREEN: 1,
@@ -7,42 +6,16 @@ const STATUS = {
 
 
 class LinkedListNode {
-
   constructor() {
     this._nextNode = null;
   }
-
   setNextNode(linkedListNode) {
     this._nextNode = linkedListNode;
   }
-
   getNextNode() {
     return this._nextNode;
   }
-
 }
-
-
-//    class CenteredAnchorGenerator {
-//        constructor(x, y) {
-//            this._anchor = new Anchor(x, y);
-//            this._done = false;
-//        }
-//
-//        reset() {
-//            this._done = false;
-//        }
-//
-//        hasNext() {
-//            return !this._done;
-//        }
-//
-//        next() {
-//            this._done = true;
-//            return this._anchor;
-//        }
-//    }
-
 
 const DEFAULT_POSITIONS = [
   //corners
@@ -105,35 +78,28 @@ class MultiAnchorGenerator {
     this._x = x;
     this._y = y;
   }
-
   makeAnchor() {
     return new Anchor(this._x, this._y);
   }
-
   getX() {
     return this._x;
   }
-
   getY() {
     return this._y;
   }
-
   reset() {
     this._curI = Math.max(this._curI - 1, 0);
     this._counterId = 0;
   }
-
   hasNext() {
     return (this._counterId < this._positions.length);
   }
-
   next(anchor) {
     const params = this._positions[this._curI];
     anchor.setParams(params.shiftX, params.shiftY, params.offsetX, params.offsetY, this._curI);
     this._curI = (this._curI + 1) % this._positions.length;
     this._counterId++;
   }
-
   getAnchorId() {
     return this._curI;
   }
@@ -144,17 +110,14 @@ class DivPool {
   constructor() {
     this._divs = [];
   }
-
   getDiv() {
     if (this._divs.length > 0) {
       return this._divs.pop();
     }
-
     const div = document.createElement('div');
     div.style.position = 'absolute';
     return div;
   }
-
   returnDiv(div) {
     if (this._divs.length < 1000) {
       this._divs.push(div);
@@ -234,25 +197,6 @@ class Label extends LinkedListNode {
 
     this._tmpLabelComp = null;
   }
-
-//        setTmpLabelComp(tmpLabel) {
-//            this._tmpAnchorId = this._anchorGenerator.getAnchorId();
-//            this._tmpLabelComp = tmpLabel;
-//        }
-
-
-//        canSkipComparison(tmpLabel) {
-//            if (this._tmpAnchorId === this._anchorGenerator.getAnchorId()) {
-//                return tmpLabel === this._tmpLabelComp;
-//            }
-//            return false;
-//        }
-
-//        getTmpLabelComp() {
-//            return this._tmpLabelComp;
-//        }
-
-
   removeDomDivReference() {
     const div = this._domDiv;
     this._domDiv = null;
@@ -294,7 +238,6 @@ class Label extends LinkedListNode {
   }
 
   intersects(label) {
-
     const aid = label.getAnchorId();
     if (
     label === this._lastCompLabel &&
@@ -302,8 +245,6 @@ class Label extends LinkedListNode {
     ) {
       return this._lastIntersection;
     }
-
-
     this._lastCompLabel = label;
     this._lastAnchorId = aid;
     if (
@@ -393,7 +334,6 @@ class Label extends LinkedListNode {
       }
     }
   }
-
   setShouldRemove(remove) {
     this._shouldRemove = remove;
   }
@@ -422,10 +362,6 @@ class Label extends LinkedListNode {
   }
 }
 
-
-//kind of hacky, but we want to both use a cell as an element in the gridcell
-// - link each cell to all the labels inside
-// - link each label to all of its cells
 class DoublyLinkedListNode {
   constructor() {
     this._nextNodeDLL = null;
@@ -465,16 +401,14 @@ class Grid {
 
 
   constructor(width, height) {
-    this._w = width;
-    this._h = height;
+    this._width = width;
+    this._height = height;
 
-    const targetSize = 64;
-//            const targetSize = 8;
-    this._cols = Math.round(this._w / targetSize);
-    this._rows = Math.round(this._h / targetSize);
-    this._cellWidth = Math.round(this._w / this._cols);
-    this._cellHeight = Math.round(this._h / this._rows);
-
+  const targetSize = 128;
+    this._cols = Math.round(this._width / targetSize);
+    this._rows = Math.round(this._height / targetSize);
+    this._cellWidth = Math.round(this._width / this._cols);
+    this._cellHeight = Math.round(this._height / this._rows);
 
     this._cellArray = new Array(this._cols * this._rows);
     for (let i = 0; i < this._cellArray.length; i++) {
@@ -507,9 +441,9 @@ class Grid {
     if (
 
     label.getViewX() >= 0 &&
-    label.getViewX() + label.getWidth() <= this._w &&
+    label.getViewX() + label.getWidth() <= this._width &&
     label.getViewY() >= 0 &&
-    label.getViewY() + label.getHeight() <= this._w
+    label.getViewY() + label.getHeight() <= this._width
 
     ) {
       return true;
@@ -519,10 +453,7 @@ class Grid {
 
 
   hasConflictsAtAnchors(label) {
-    //try all labels
     label.resetAnchor();
-//            console.log(label._priority, label._anchorGenerator._curI);
-
     while (label.hasNextAnchor()) {
       label.nextAnchor();
       const conflicts = this.hasConflicts(label);
@@ -635,7 +566,6 @@ class LabelLayer extends LinkedListNode {
     //div to place labels in
     this._labelDiv = document.createElement('div');
     this._labelDiv.style.position = 'absolute';
-//            this._labelDiv.style.border = '1px solid green';
     this._labelDiv.style.left = 0;
     this._labelDiv.style.top = 0;
     this._labelDiv.style.overflow = 'hidden';
@@ -758,17 +688,14 @@ class LabelLayer extends LinkedListNode {
   }
 
 
-  //todo: his is buggy, because it doesnt add it in the right position
   changeLabelPriority(labelToMove, newPriority) {
 
     if (labelToMove.getPriority() === newPriority) {
       return;
     }
 
-
     let previousNode = this;
     let node = previousNode.getNextNode();
-
 
     let nodeBeforeTarget = null;
     let nodeToInsertOn = null;
@@ -819,14 +746,13 @@ class LabelLayer extends LinkedListNode {
     }
     this._rafHandle = requestAnimationFrame(() => {
       this._rafHandle = -1;
+      // const bef = Date.now();
       this._updateStateOfAllLabels();
+      // console.log('timing: ', Date.now() - bef);
     });
   }
 
   _canAddToScreenAndMark(label, shouldCheck) {
-    //these two function calls should be combined
-
-
     if (shouldCheck) {
       if (this._gridFront.hasConflictsAtAnchors(label)) {
         return false;
@@ -847,8 +773,6 @@ class LabelLayer extends LinkedListNode {
 
   _updateStateOfAllLabels() {
 
-    //swap the grids. this is backwards. should just copy over elements...
-    try {
       const tmp = this._gridBack;
       this._gridBack = this._gridFront;
       this._gridFront = tmp;
@@ -858,7 +782,6 @@ class LabelLayer extends LinkedListNode {
       let label = previousNode.getNextNode();
 
 
-      //todo keep track of first unintialized label or dirty label. this will trigger if we need to reposition
       let shouldCheckForConflicts = false;
       while (label) {
 
@@ -870,9 +793,6 @@ class LabelLayer extends LinkedListNode {
         (labelStatus === STATUS.ON_SCREEN && label.isDirty()) ||
         (labelStatus === STATUS.OFF_SCREEN && label.isDirty());
 
-
-        //mark the comp-label to null
-//                label.setTmpLabelComp(null);
         label.clearLastCompLabel();
         label.unhookAllCells();
 
@@ -946,10 +866,6 @@ class LabelLayer extends LinkedListNode {
         labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
       }
 
-    } catch (e) {
-      console.log('LabelLayer crashes');
-      console.error(e);
-    }
   }
 
   /**
@@ -1021,10 +937,6 @@ class LabelLayer extends LinkedListNode {
   }
 
   scaleOnPoint(sx, sy, pX, pY) {
-
-
-//            const centerX = this._width / 2;
-//            const centerY = this._height / 2;
 
     const tx = pX - (pX * sx);
     const ty = pY - (pY * sy);
