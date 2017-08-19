@@ -15,7 +15,7 @@
         margin: 0 auto;
         width: 100%;
         height: 100%;
-        border: 1px solid red;
+        /*border: 1px solid red;*/
         user-select: none;
     }
 
@@ -29,20 +29,16 @@
     }
 
     canvas {
-        border: 1px solid green;
+        /*border: 1px solid green;*/
     }
 
     #docs {
         background-color: rgba(240, 240, 240, 0.9);
-        position: absolute;
-        z-index: 10;
-        right: 0;
-        top: 0;
         padding: 10px; /*height: 100%;*/
-        max-width: 30%;
+        /*max-width: 30%;*/
         margin: 4px;
-        display: inline-block;
-        overflow: scroll;
+        /*display: inline-block;*/
+        /*overflow: scroll;*/
         user-select: none;
     }
 
@@ -67,11 +63,14 @@
     } </style>
 </head>
 <body>
-<div id="instructions"> dgfhg</div>
-<div id="docs"><h1>LabelLayer</h1></div>
+<!--<div id="docs"><h1>LabelLayer</h1></div>-->
 <div id="wrapper"></div>
+
+
+<!--<script src="data/cities_10000.js"></script>-->
 <script src="data/cities_trim_small.js"></script>
-<script src="dist/LabelLayer.js"></script>
+<!--<script src="dist/LabelLayer.js"></script>-->
+<script src="./LabelLayer.js"></script>
 <script src="lib/RTree2d.js"></script>
 <script>
     const wrapper = document.getElementById('wrapper');
@@ -83,21 +82,32 @@
     canvas.style.left = 0;
     wrapper.appendChild(canvas);
     const context2d = canvas.getContext('2d');
+
+
+    window.cities = [
+       ['foo',100,-60, 1],
+//       ['bar',100,-80, 2]
+    ] ;
+
     const data = cities.map((c) => {
         return {
-            x: c[1], y: c[2], pop: c[3], name: c[0], labelHandle: null
+            x: c[1],
+            y: c[2],
+            pop: c[3],
+            name: c[0],
+            labelHandle: null
         };
     });
 
 
     const index = new RTree2d();
 
-    const labelLayer = new LabelLayer(wrapper);
+    const labelLayer = new LabelLayer(wrapper, {autoPaint: false});
 
     data.forEach(function (d) {
         index.insert(d, d.x, d.y, 1, 1);
-        const label = `<div class="label">${d.name + ": " + d.pop}</div>`;
-        d.labelHandle = labelLayer.createLabel(d.x, d.y, label, d.pop);
+//        const label = `<div class="label">${d.name + ": " + d.pop}</div>`;
+//        d.labelHandle = labelLayer.createLabel(d.x, d.y, label, d.pop);
     });
 
 
@@ -178,6 +188,14 @@
     });
 
     let raf = -1;
+    let out = {x: 0, y: 0};
+    const labelConfig = {
+        labelHandle: null,
+        contents: null,
+        priority: 0,
+        x: 0,
+        y: 0
+    };
     function invalidate() {
 
         if (raf !== -1) {
@@ -185,17 +203,7 @@
         }
 
         raf = requestAnimationFrame(function draw() {
-
-//            console.log(transformation);
-
             raf = -1;
-
-            data.forEach(function (l) {
-                if (!l.labelHandle) {
-                    return;
-                }
-                labelLayer.moveLabel(l.labelHandle, transformation.toViewX(l.x), transformation.toViewY(l.y));
-            })
 
             //draw cities
             const x = transformation.toWorldX(0);
@@ -203,25 +211,56 @@
             const toX = transformation.toWorldX(canvas.width);
             const y = transformation.toWorldY(canvas.height);
 
-            const results = index.search(x, y, toX - x, tY - y);
-//            results.length = 1;
 
-//            console.log(results.length);
+            const citiesInView = index.search(x, y, toX - x, tY - y);
+
+            console.log(citiesInView.length);
 
             context2d.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < results.length; i++) {
-                const city = results[i];
+            for (let i = 0; i < citiesInView.length; i++) {
+                const city = citiesInView[i];
                 const x = transformation.toViewX(city.x);
                 const y = transformation.toViewY(city.y);
-//                console.log( y, city.y, transformation._sy, transformation._ty);
                 context2d.beginPath();
                 context2d.arc(x, y, 10, 0, Math.PI * 2);
                 context2d.fillStyle = 'rgba(175,105,105,0.1)';
                 context2d.fill();
             }
 
+
+            const bef = Date.now();
+            labelLayer.setLabels({
+                forEach: function (labelConfigCallback) {
+                    citiesInView.forEach(function (city) {
+                        labelConfig.labelHandle = city.labelHandle;
+                        labelConfig.contents = `<div class="label">${city.name + ": " + city.pop}</div>`;
+                        labelConfig.priority = city.pop;
+                        labelConfig.x = transformation.toViewX(city.x);
+                        labelConfig.y = transformation.toViewY(city.y);
+                        city.labelHandle = labelConfigCallback(labelConfig);
+                    });
+                }
+            });
+            console.log('draw time', Date.now() - bef);
+
+
+            context2d.strokeStyle = 'rgba(105,105,105,1)';
+            context2d.globalAlpha = 0.1;
+
+            const vis = labelLayer.getVisibleLabels();
+            vis.forEach(function (label) {
+                const x = label.getX();
+                const y = label.getY();
+                labelLayer.getLabelCenter(label, out);
+                context2d.moveTo(out.x, out.y);
+                context2d.lineTo(x, y);
+                context2d.stroke();
+            });
+
+            context2d.globalAlpha = 1;
         });
     }
+
 
     window.addEventListener('resize', function () {
         canvas.width = wrapper.clientWidth;
@@ -229,13 +268,13 @@
     });
 
     window.addEventListener('mousewheel', function (event) {
+        event.preventDefault();
         let cx = event.clientX;
         let cy = event.clientY;
         let count = 1;
         let size = 1.05;
         let thing = event.wheelDelta >= 0 ? size : 1 / size;
 
-        console.log(cx,cy);
         transformation.scaleOnPoint(thing, thing, cx, cy);
     });
     invalidate();

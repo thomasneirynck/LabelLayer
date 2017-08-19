@@ -4,15 +4,66 @@ const STATUS = {
   OFF_SCREEN: 2
 };
 
+class DoublyLinkedListNode {
 
-class LinkedListNode {
-  constructor() {
-    this._nextNode = null;
+  static removeFromDoublyLinkedList(cellToRemove) {
+    const previousNode = cellToRemove._previousNodeDLL;
+    const nextNode = cellToRemove._nextNodeDLL;
+    cellToRemove._previousNodeDLL = null;
+    cellToRemove._nextNodeDLL = null;
+    if (previousNode) {
+      previousNode._nextNodeDLL = nextNode;
+    }
+    if (nextNode) {
+      nextNode._previousNodeDLL = previousNode;
+    }
   }
-  setNextNode(linkedListNode) {
-    this._nextNode = linkedListNode;
+
+  static addToList(headLL, nodeToInsert) {
+
+    if (headLL === null) {
+      nodeToInsert._previousNodeDLL = null;
+      nodeToInsert._nextNodeDLL = null;
+      return nodeToInsert;
+    }
+    //is this a new head?
+    if (headLL.getPriority() <= nodeToInsert.getPriority()) {
+      nodeToInsert.setNextNode(headLL);
+      return nodeToInsert;
+    }
+    //not new head, so anywhere else
+    let beforeNode = headLL;
+    while (beforeNode) {
+      const nextNode = beforeNode._nextNodeDLL;
+      const shouldInsert = nextNode === null || nextNode.getPriority() <= nodeToInsert.getPriority();
+      if (shouldInsert) {
+        const afterNode = beforeNode._nextNodeDLL;
+        beforeNode._nextNodeDLL = nodeToInsert;
+        nodeToInsert._previousNodeDLL = beforeNode;
+        nodeToInsert._nextNodeDLL = afterNode;
+        break;
+      }
+      beforeNode = nextNode;
+    }
+    return headLL;
+
+  }
+
+  constructor() {
+    // super();
+    this._nextNodeDLL = null;
+    this._previousNodeDLL = null;
+  }
+
+  setNextNodeDLL(cell) {
+    this._nextNodeDLL = cell;
+  }
+
+  setPreviousNodeDLL(cell) {
+    this._previousNodeDLL = cell;
   }
 }
+
 
 const DEFAULT_POSITIONS = [
   //corners
@@ -75,28 +126,35 @@ class MultiAnchorGenerator {
     this._x = x;
     this._y = y;
   }
+
   makeAnchor() {
     return new Anchor(this._x, this._y);
   }
+
   getX() {
     return this._x;
   }
+
   getY() {
     return this._y;
   }
+
   reset() {
     this._curI = Math.max(this._curI - 1, 0);
     this._counterId = 0;
   }
+
   hasNext() {
     return (this._counterId < this._positions.length);
   }
+
   next(anchor) {
     const params = this._positions[this._curI];
     anchor.setParams(params.shiftX, params.shiftY, params.offsetX, params.offsetY, this._curI);
     this._curI = (this._curI + 1) % this._positions.length;
     this._counterId++;
   }
+
   getAnchorId() {
     return this._curI;
   }
@@ -107,6 +165,7 @@ class DivPool {
   constructor() {
     this._divs = [];
   }
+
   getDiv() {
     if (this._divs.length > 0) {
       return this._divs.pop();
@@ -115,6 +174,7 @@ class DivPool {
     div.style.position = 'absolute';
     return div;
   }
+
   returnDiv(div) {
     if (this._divs.length < 1000) {
       this._divs.push(div);
@@ -169,7 +229,7 @@ class Anchor {
 }
 
 
-class Label extends LinkedListNode {
+class Label extends DoublyLinkedListNode {
 
   constructor(labelLayer, htmlContents, anchorGenerator) {
 
@@ -194,6 +254,7 @@ class Label extends LinkedListNode {
 
     this._tmpLabelComp = null;
   }
+
   removeDomDivReference() {
     const div = this._domDiv;
     this._domDiv = null;
@@ -311,18 +372,10 @@ class Label extends LinkedListNode {
 
     for (let i = 0; i < this._cells.length; i++) {
       const cellToRemove = this._cells[i];
-      const previousCell = cellToRemove._previousNodeDLL;
-      const nextCell = cellToRemove._nextNodeDLL;
-      cellToRemove.setPreviousNodeDLL(null);
-      cellToRemove.setNextNodeDLL(null);
-      if (previousCell) {
-        previousCell.setNextNodeDLL(nextCell);
-      }
-      if (nextCell) {
-        nextCell.setPreviousNodeDLL(previousCell);
-      }
+      DoublyLinkedListNode.removeFromDoublyLinkedList(cellToRemove);
     }
   }
+
   setShouldRemove(remove) {
     this._shouldRemove = remove;
   }
@@ -351,20 +404,6 @@ class Label extends LinkedListNode {
   }
 }
 
-class DoublyLinkedListNode {
-  constructor() {
-    this._nextNodeDLL = null;
-    this._previousNodeDLL = null;
-  }
-
-  setNextNodeDLL(cell) {
-    this._nextNodeDLL = cell;
-  }
-
-  setPreviousNodeDLL(cell) {
-    this._previousNodeDLL = cell;
-  }
-}
 
 
 class Cell extends DoublyLinkedListNode {
@@ -385,7 +424,7 @@ class Grid {
     this._width = width;
     this._height = height;
 
-  const targetSize = 128;
+    const targetSize = 128;
     this._cols = Math.round(this._width / targetSize);
     this._rows = Math.round(this._height / targetSize);
     this._cellWidth = Math.round(this._width / this._cols);
@@ -506,7 +545,7 @@ class Grid {
         const gridCell = this._cellArray[index];
         const labelCell = label.getCell();
 
-        const nextCell = gridCell._nextNodeDLL
+        const nextCell = gridCell._nextNodeDLL;
         labelCell.setPreviousNodeDLL(gridCell);
         gridCell.setNextNodeDLL(labelCell);
 
@@ -537,12 +576,16 @@ class Grid {
 }
 
 
-class LabelLayer extends LinkedListNode {
+// class LabelLayer extends SingleLinkedListNode {
+class LabelLayer extends DoublyLinkedListNode {
 
-  constructor(container) {
+  constructor(container, options) {
 
     super();
+
+    options = options || {};
     this._containerDiv = container;
+    this._autoPaint = typeof options.autoPaint !== 'undefined' ? options.autoPaint : true;
 
     //div to place labels in
     this._labelDiv = document.createElement('div');
@@ -653,14 +696,18 @@ class LabelLayer extends LinkedListNode {
   getVisibleLabels() {
 
     let visibleLabels = [];
-    let node = this._nextNode;
+    let node = this._nextNodeDLL;
     while (node) {
       if (node.getStatus() === STATUS.ON_SCREEN) {
         visibleLabels.push(node);
       }
-      node = node._nextNode;
+      node = node._nextNodeDLL;
     }
     return visibleLabels;
+  }
+
+  paint() {
+    this._updateStateOfAllLabels();
   }
 
   getLabelCenter(labelHandle, out) {
@@ -668,61 +715,13 @@ class LabelLayer extends LinkedListNode {
     out.y = labelHandle.getViewY() + labelHandle._height / 2;
   }
 
-
-  changeLabelPriority(labelToMove, newPriority) {
-
-    if (labelToMove.getPriority() === newPriority) {
-      return;
-    }
-
-    let previousNode = this;
-    let node = previousNode._nextNode;
-
-    let nodeBeforeTarget = null;
-    let nodeToInsertOn = null;
-
-    while (node) {
-
-      if (node === labelToMove) {
-        nodeBeforeTarget = previousNode;
-      }
-      const nextNode = node._nextNode;
-      const foundInsertionNode = !nodeToInsertOn && (nextNode === null || node.getPriority() <= newPriority);
-      if (foundInsertionNode) {
-        nodeToInsertOn = previousNode;
-      }
-
-      if (nodeBeforeTarget && nodeToInsertOn) {
-        if (labelToMove !== nodeToInsertOn) {
-          //remove the node
-          const nextAfterTarget = labelToMove._nextNode;
-          labelToMove.setNextNode(null);
-          nodeBeforeTarget.setNextNode(nextAfterTarget);
-
-          //and insert into new position
-          const next = nodeToInsertOn._nextNode;
-          labelToMove.setNextNode(next);
-          nodeToInsertOn.setNextNode(labelToMove);
-
-        }
-        break;
-      }
-
-      previousNode = node;
-      node = previousNode._nextNode;
-
-    }
-
-    labelToMove.setPriority(newPriority);
-    this._invalidate();
-  }
-
   _drawGrid(context) {
     this._gridFront.draw(context);
   }
 
+
   _invalidate() {
-    if (this._rafHandle > -1) {
+    if (this._rafHandle > -1 || !this._autoPaint) {
       return;
     }
     this._rafHandle = requestAnimationFrame(() => {
@@ -748,143 +747,117 @@ class LabelLayer extends LinkedListNode {
         return false;
       }
     }
+  }
 
+  _initFrontBackGrids() {
+    //the grid buffer
+    const swap = this._gridBack;
+    this._gridBack = this._gridFront;
+    this._gridFront = swap;
+    this._gridFront.clearGrid();
   }
 
   _updateStateOfAllLabels() {
 
-      const tmp = this._gridBack;
-      this._gridBack = this._gridFront;
-      this._gridFront = tmp;
-      this._gridFront.clearGrid();
+    this._initFrontBackGrids();
 
-      let previousNode = this;
-      let label = previousNode._nextNode;
+    let beforeNode = this;
+    let label = beforeNode._nextNodeDLL;
+    let shouldCheckForConflicts = false;//can skip conflict checks as long as we have untracked state.
+    while (label) {
 
+      const labelStatus = label.getStatus();
+      const shouldRemove = label.getShouldRemove();
 
-      let shouldCheckForConflicts = false;
-      while (label) {
+      shouldCheckForConflicts = shouldCheckForConflicts ||
+      labelStatus === STATUS.NOT_INITIALIZED ||
+      (labelStatus === STATUS.ON_SCREEN && label.isDirty()) ||
+      (labelStatus === STATUS.OFF_SCREEN && label.isDirty());
 
-        const labelStatus = label.getStatus();
-        const shouldRemove = label.getShouldRemove();
+      label.clearLastCompLabel();
+      label.unhookAllCells();
 
-        shouldCheckForConflicts = shouldCheckForConflicts ||
-        labelStatus === STATUS.NOT_INITIALIZED ||
-        (labelStatus === STATUS.ON_SCREEN && label.isDirty()) ||
-        (labelStatus === STATUS.OFF_SCREEN && label.isDirty());
-
-        label.clearLastCompLabel();
-        label.unhookAllCells();
-
-        if (shouldRemove) {
-          const nextLabel = label._nextNode;
-          label.setNextNode(null);
-          previousNode.setNextNode(nextLabel);
-          if (labelStatus === STATUS.ON_SCREEN) {
+      if (shouldRemove) {
+        const nextLabel = label._nextNodeDLL;
+        label.setNextNodeDLL(null);
+        beforeNode.setNextNodeDLL(nextLabel);
+        if (labelStatus === STATUS.ON_SCREEN) {
+          label.setStatus(STATUS.OFF_SCREEN);
+          this._labelsToRemoveFromDOM.push(label);
+        }
+        label = nextLabel;
+      } else {
+        if (labelStatus === STATUS.NOT_INITIALIZED) {
+          label.measure(this._measureDiv);
+          if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
+            label.setStatus(STATUS.ON_SCREEN);
+            this._labelsToAddToDOM.push(label);
+          } else {
+            label.setStatus(STATUS.OFF_SCREEN);
+          }
+        } else if (labelStatus === STATUS.OFF_SCREEN) {
+          //check if can add
+          if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
+            label.setStatus(STATUS.ON_SCREEN);
+            this._labelsToAddToDOM.push(label);
+          }
+        } else if (labelStatus === STATUS.ON_SCREEN) {
+          if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
+            if (label.isDirty()) {
+              this._labelsToChangePositionForInDOM.push(label);
+              label.unDirtyPosition();
+            }
+          } else {
             label.setStatus(STATUS.OFF_SCREEN);
             this._labelsToRemoveFromDOM.push(label);
           }
-          label = nextLabel;
-        } else {
-          if (labelStatus === STATUS.NOT_INITIALIZED) {
-            label.measure(this._measureDiv);
-            if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
-              label.setStatus(STATUS.ON_SCREEN);
-              this._labelsToAddToDOM.push(label);
-            } else {
-              label.setStatus(STATUS.OFF_SCREEN);
-            }
-          } else if (labelStatus === STATUS.OFF_SCREEN) {
-            //check if can add
-            if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
-              label.setStatus(STATUS.ON_SCREEN);
-              this._labelsToAddToDOM.push(label);
-            }
-          } else if (labelStatus === STATUS.ON_SCREEN) {
-            if (this._canAddToScreenAndMark(label, shouldCheckForConflicts)) {
-              if (label.isDirty()) {
-                this._labelsToChangePositionForInDOM.push(label);
-                label.unDirtyPosition();
-              }
-            } else {
-              label.setStatus(STATUS.OFF_SCREEN);
-              this._labelsToRemoveFromDOM.push(label);
-            }
-          }
-
-          label.clearLastCompLabel();
-          previousNode = label;
-          label = label._nextNode;
         }
-      }
 
-      let labelToRemove = this._labelsToRemoveFromDOM.pop();
-      while (labelToRemove) {
-        this._labelDiv.removeChild(labelToRemove.getDOMDiv());
-        const div = labelToRemove.removeDomDivReference();
-        this._divPool.returnDiv(div);
-        labelToRemove = this._labelsToRemoveFromDOM.pop();
+        label.clearLastCompLabel();
+        beforeNode = label;
+        label = label._nextNodeDLL;
       }
+    }
 
-      let labelToAdd = this._labelsToAddToDOM.pop();
-      while (labelToAdd) {
-        const div = this._divPool.getDiv();
-        labelToAdd.setDomDiv(div);
-        div.style.left = labelToAdd.getViewX() + 'px';
-        div.style.top = labelToAdd.getViewY() + 'px';
-        div.style.width = labelToAdd._width + 1 + 'px';//ugh, how to measure borders?
-        div.style.height = labelToAdd._height + 1 + 'px';//ugh, how to measure borders?
-        this._labelDiv.appendChild(div);
-        labelToAdd = this._labelsToAddToDOM.pop();
-      }
-
-      let labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
-      while (labelToChangePositionFor) {
-        const div = labelToChangePositionFor.getDOMDiv();
-        div.style.left = labelToChangePositionFor.getViewX() + 'px';
-        div.style.top = labelToChangePositionFor.getViewY() + 'px';
-        labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
-      }
-
+    this._updateDOM();
   }
 
-  /**
-   * sorted insert
-   * @param headLL
-   * @param nodeToInsert
-   * @return {*} new head of LL
-   * @private
-   */
-  _addTolinkedList(headLL, nodeToInsert) {
+  _updateDOM() {
 
-    if (headLL === null) {
-      return nodeToInsert;
+    let labelToRemove = this._labelsToRemoveFromDOM.pop();
+    while (labelToRemove) {
+      // if (labelToRemove.getDOMDiv()) {//todo: this check should NOT happen
+      this._labelDiv.removeChild(labelToRemove.getDOMDiv());
+      const div = labelToRemove.removeDomDivReference();
+      this._divPool.returnDiv(div);
+      // }
+      labelToRemove = this._labelsToRemoveFromDOM.pop();
     }
 
-    //is this a new head?
-    if (headLL.getPriority() <= nodeToInsert.getPriority()) {
-      nodeToInsert.setNextNode(headLL);
-      return nodeToInsert;
+    let labelToAdd = this._labelsToAddToDOM.pop();
+    while (labelToAdd) {
+      const div = this._divPool.getDiv();
+      labelToAdd.setDomDiv(div);
+      div.style.left = labelToAdd.getViewX() + 'px';
+      div.style.top = labelToAdd.getViewY() + 'px';
+      div.style.width = labelToAdd._width + 1 + 'px';//ugh, how to measure borders?
+      div.style.height = labelToAdd._height + 1 + 'px';//ugh, how to measure borders?
+      this._labelDiv.appendChild(div);
+      labelToAdd = this._labelsToAddToDOM.pop();
     }
 
-    //not new head, so anywhere else
-    let currentNode = headLL;
-    while (currentNode) {
-      let nextNode = currentNode._nextNode;
-      const shouldInsert = nextNode === null || nextNode.getPriority() <= nodeToInsert.getPriority();
-      if (shouldInsert) {
-        currentNode.setNextNode(nodeToInsert);
-        nodeToInsert.setNextNode(nextNode);
-        break;
-      }
-      currentNode = nextNode;
+    let labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
+    while (labelToChangePositionFor) {
+      const div = labelToChangePositionFor.getDOMDiv();
+      div.style.left = labelToChangePositionFor.getViewX() + 'px';
+      div.style.top = labelToChangePositionFor.getViewY() + 'px';
+      labelToChangePositionFor = this._labelsToChangePositionForInDOM.pop();
     }
-    return headLL;
   }
 
   _dumpLabelList(property) {
     const labels = [];
-    let label = this._nextNode;
+    let label = this._nextNodeDLL;
     while (label) {
       let thing;
       if (property) {
@@ -893,7 +866,7 @@ class LabelLayer extends LinkedListNode {
         thing = label;
       }
       labels.push(thing);
-      label = label._nextNode;
+      label = label._nextNodeDLL;
     }
     return labels;
 
@@ -908,8 +881,7 @@ class LabelLayer extends LinkedListNode {
 
 
   _addToAllLabelList(labelToAdd) {
-    const newHead = this._addTolinkedList(this._nextNode, labelToAdd);
-    this.setNextNode(newHead);
+    this._nextNodeDLL = DoublyLinkedListNode.addToList(this._nextNodeDLL, labelToAdd);
   }
 
   _createCellsForLabel(width, height, label) {
@@ -921,12 +893,12 @@ class LabelLayer extends LinkedListNode {
     const tx = pX - (pX * sx);
     const ty = pY - (pY * sy);
 
-    let label = this._nextNode;
+    let label = this._nextNodeDLL;
     while (label) {
       const nx = label.getX() * sx + tx;
       const ny = label.getY() * sy + ty;
       this.moveLabel(label, nx, ny);
-      label = label._nextNode;
+      label = label._nextNodeDLL;
     }
   }
 
