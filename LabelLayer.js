@@ -12,9 +12,9 @@ class LinkedListNode {
   setNextNode(linkedListNode) {
     this._nextNode = linkedListNode;
   }
-  getNextNode() {
-    return this._nextNode;
-  }
+  // getNextNode() {
+  //   return this._nextNode;
+  // }
 }
 
 const DEFAULT_POSITIONS = [
@@ -249,9 +249,9 @@ class Label extends LinkedListNode {
     this._lastAnchorId = aid;
     if (
     this.getViewX() + this._width < label.getViewX() ||
-    label.getViewX() + label.getWidth() < this.getViewX() ||
+    label.getViewX() + label._width < this.getViewX() ||
     this.getViewY() + this._height < label.getViewY() ||
-    label.getViewY() + label.getHeight() < this.getViewY()
+    label.getViewY() + label._height < this.getViewY()
     ) {
       this._lastIntersection = false;
       return false;
@@ -267,14 +267,6 @@ class Label extends LinkedListNode {
 
   getViewY() {
     return this._anchor.getTop(this._height);
-  }
-
-  getWidth() {
-    return this._width;
-  }
-
-  getHeight() {
-    return this._height;
   }
 
   setDomDiv(div) {
@@ -322,8 +314,8 @@ class Label extends LinkedListNode {
 
     for (let i = 0; i < this._cells.length; i++) {
       const cellToRemove = this._cells[i];
-      const previousCell = cellToRemove.getPreviousNodeDLL();
-      const nextCell = cellToRemove.getNextNodeDLL();
+      const previousCell = cellToRemove._previousNodeDLL;
+      const nextCell = cellToRemove._nextNodeDLL;
       cellToRemove.setPreviousNodeDLL(null);
       cellToRemove.setNextNodeDLL(null);
       if (previousCell) {
@@ -441,9 +433,9 @@ class Grid {
     if (
 
     label.getViewX() >= 0 &&
-    label.getViewX() + label.getWidth() <= this._width &&
+    label.getViewX() + label._width <= this._width &&
     label.getViewY() >= 0 &&
-    label.getViewY() + label.getHeight() <= this._width
+    label.getViewY() + label._height <= this._width
 
     ) {
       return true;
@@ -473,8 +465,8 @@ class Grid {
     const x = label.getViewX();
     const y = label.getViewY();
 
-    const w = label.getWidth();
-    const h = label.getHeight();
+    const w = label._width;
+    const h = label._height;
 
     const colStart = Math.max(0, Math.floor(x / this._cellWidth));
     const colEnd = Math.min(Math.ceil((x + w) / this._cellWidth), this._cols);
@@ -486,13 +478,13 @@ class Grid {
       for (let r = rowStart; r < rowEnd; r++) {
         const index = this.toIndex(c, r);
         const gridCell = this._cellArray[index];
-        let cell = gridCell.getNextNodeDLL();
+        let cell = gridCell._nextNodeDLL;
         while (cell) {
           const compLabel = cell.getLabel();
           if (compLabel.intersects(label)) {
             return true;
           }
-          cell = cell.getNextNodeDLL();
+          cell = cell._nextNodeDLL;
         }
       }
     }
@@ -511,8 +503,8 @@ class Grid {
     const x = label.getViewX();
     const y = label.getViewY();
 
-    const w = label.getWidth();
-    const h = label.getHeight();
+    const w = label._width;
+    const h = label._height;
 
     const colStart = Math.max(0, Math.floor(x / this._cellWidth));
     const colEnd = Math.min(Math.ceil((x + w) / this._cellWidth), this._cols);
@@ -525,7 +517,7 @@ class Grid {
         const gridCell = this._cellArray[index];
         const labelCell = label.getCell();
 
-        const nextCell = gridCell.getNextNodeDLL()
+        const nextCell = gridCell._nextNodeDLL
         labelCell.setPreviousNodeDLL(gridCell);
         gridCell.setNextNodeDLL(labelCell);
 
@@ -544,8 +536,8 @@ class Grid {
       for (let r = 0; r < this._rows; r++) {
         const index = this.toIndex(c, r);
         const cell = this._cellArray[index];
-        context2d.fillStyle = cell.getNextNodeDLL() === null ? 'rgba(0,255,0, 0.02)' : 'rgba(255,0,0,0.02)';
-        context2d.strokeStyle = cell.getNextNodeDLL() === null ? 'rgba(0,255,0, 0.2)' : 'rgba(255,0,0,0.2)';
+        context2d.fillStyle = cell._nextNodeDLL === null ? 'rgba(0,255,0, 0.02)' : 'rgba(255,0,0,0.02)';
+        context2d.strokeStyle = cell._nextNodeDLL === null ? 'rgba(0,255,0, 0.2)' : 'rgba(255,0,0,0.2)';
         context2d.fillRect(c * this._cellWidth, r * this._cellHeight, this._cellWidth, this._cellHeight);
         context2d.strokeRect(c * this._cellWidth, r * this._cellHeight, this._cellWidth, this._cellHeight);
       }
@@ -672,19 +664,19 @@ class LabelLayer extends LinkedListNode {
   getVisibleLabels() {
 
     let visibleLabels = [];
-    let node = this.getNextNode();
+    let node = this._nextNode;
     while (node) {
       if (node.getStatus() === STATUS.ON_SCREEN) {
         visibleLabels.push(node);
       }
-      node = node.getNextNode();
+      node = node._nextNode;
     }
     return visibleLabels;
   }
 
   getLabelCenter(labelHandle, out) {
-    out.x = labelHandle.getViewX() + labelHandle.getWidth() / 2;
-    out.y = labelHandle.getViewY() + labelHandle.getHeight() / 2;
+    out.x = labelHandle.getViewX() + labelHandle._width / 2;
+    out.y = labelHandle.getViewY() + labelHandle._height / 2;
   }
 
 
@@ -695,7 +687,7 @@ class LabelLayer extends LinkedListNode {
     }
 
     let previousNode = this;
-    let node = previousNode.getNextNode();
+    let node = previousNode._nextNode;
 
     let nodeBeforeTarget = null;
     let nodeToInsertOn = null;
@@ -705,7 +697,7 @@ class LabelLayer extends LinkedListNode {
       if (node === labelToMove) {
         nodeBeforeTarget = previousNode;
       }
-      const nextNode = node.getNextNode();
+      const nextNode = node._nextNode;
       const foundInsertionNode = !nodeToInsertOn && (nextNode === null || node.getPriority() <= newPriority);
       if (foundInsertionNode) {
         nodeToInsertOn = previousNode;
@@ -714,12 +706,12 @@ class LabelLayer extends LinkedListNode {
       if (nodeBeforeTarget && nodeToInsertOn) {
         if (labelToMove !== nodeToInsertOn) {
           //remove the node
-          const nextAfterTarget = labelToMove.getNextNode();
+          const nextAfterTarget = labelToMove._nextNode;
           labelToMove.setNextNode(null);
           nodeBeforeTarget.setNextNode(nextAfterTarget);
 
           //and insert into new position
-          const next = nodeToInsertOn.getNextNode();
+          const next = nodeToInsertOn._nextNode;
           labelToMove.setNextNode(next);
           nodeToInsertOn.setNextNode(labelToMove);
 
@@ -728,7 +720,7 @@ class LabelLayer extends LinkedListNode {
       }
 
       previousNode = node;
-      node = previousNode.getNextNode();
+      node = previousNode._nextNode;
 
     }
 
@@ -746,9 +738,9 @@ class LabelLayer extends LinkedListNode {
     }
     this._rafHandle = requestAnimationFrame(() => {
       this._rafHandle = -1;
-      // const bef = Date.now();
+      const bef = Date.now();
       this._updateStateOfAllLabels();
-      // console.log('timing: ', Date.now() - bef);
+      console.log('timing: ', Date.now() - bef);
     });
   }
 
@@ -779,7 +771,7 @@ class LabelLayer extends LinkedListNode {
       this._gridFront.clearGrid();
 
       let previousNode = this;
-      let label = previousNode.getNextNode();
+      let label = previousNode._nextNode;
 
 
       let shouldCheckForConflicts = false;
@@ -797,7 +789,7 @@ class LabelLayer extends LinkedListNode {
         label.unhookAllCells();
 
         if (shouldRemove) {
-          const nextLabel = label.getNextNode();
+          const nextLabel = label._nextNode;
           label.setNextNode(null);
           previousNode.setNextNode(nextLabel);
           if (labelStatus === STATUS.ON_SCREEN) {
@@ -834,7 +826,7 @@ class LabelLayer extends LinkedListNode {
 
           label.clearLastCompLabel();
           previousNode = label;
-          label = label.getNextNode();
+          label = label._nextNode;
         }
       }
 
@@ -852,8 +844,8 @@ class LabelLayer extends LinkedListNode {
         labelToAdd.setDomDiv(div);
         div.style.left = labelToAdd.getViewX() + 'px';
         div.style.top = labelToAdd.getViewY() + 'px';
-        div.style.width = labelToAdd.getWidth() + 1 + 'px';//ugh, how to measure borders?
-        div.style.height = labelToAdd.getHeight() + 1 + 'px';//ugh, how to measure borders?
+        div.style.width = labelToAdd._width + 1 + 'px';//ugh, how to measure borders?
+        div.style.height = labelToAdd._height + 1 + 'px';//ugh, how to measure borders?
         this._labelDiv.appendChild(div);
         labelToAdd = this._labelsToAddToDOM.pop();
       }
@@ -890,7 +882,7 @@ class LabelLayer extends LinkedListNode {
     //not new head, so anywhere else
     let currentNode = headLL;
     while (currentNode) {
-      let nextNode = currentNode.getNextNode();
+      let nextNode = currentNode._nextNode;
       const shouldInsert = nextNode === null || nextNode.getPriority() <= nodeToInsert.getPriority();
       if (shouldInsert) {
         currentNode.setNextNode(nodeToInsert);
@@ -904,7 +896,7 @@ class LabelLayer extends LinkedListNode {
 
   _dumpLabelList(property) {
     const labels = [];
-    let label = this.getNextNode();
+    let label = this._nextNode;
     while (label) {
       let thing;
       if (property) {
@@ -913,7 +905,7 @@ class LabelLayer extends LinkedListNode {
         thing = label;
       }
       labels.push(thing);
-      label = label.getNextNode();
+      label = label._nextNode;
     }
     return labels;
 
@@ -928,7 +920,7 @@ class LabelLayer extends LinkedListNode {
 
 
   _addToAllLabelList(labelToAdd) {
-    const newHead = this._addTolinkedList(this.getNextNode(), labelToAdd);
+    const newHead = this._addTolinkedList(this._nextNode, labelToAdd);
     this.setNextNode(newHead);
   }
 
@@ -941,12 +933,12 @@ class LabelLayer extends LinkedListNode {
     const tx = pX - (pX * sx);
     const ty = pY - (pY * sy);
 
-    let label = this.getNextNode();
+    let label = this._nextNode;
     while (label) {
       const nx = label.getX() * sx + tx;
       const ny = label.getY() * sy + ty;
       this.moveLabel(label, nx, ny);
-      label = label.getNextNode();
+      label = label._nextNode;
     }
   }
 

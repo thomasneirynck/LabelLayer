@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6c624b6c-f600-4f32-bb3e-cce20c9ea279" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/cities.js" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LabelLayer.js" afterPath="$PROJECT_DIR$/LabelLayer.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
     </list>
     <ignored path="labeler.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -66,8 +63,8 @@
       <file leaf-file-name="LabelLayer.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/LabelLayer.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="258">
-              <caret line="443" column="39" selection-start-line="443" selection-start-column="28" selection-end-line="443" selection-end-column="39" />
+            <state relative-caret-position="268">
+              <caret line="480" column="37" selection-start-line="480" selection-start-column="29" selection-end-line="480" selection-end-column="37" />
               <folding />
             </state>
           </provider>
@@ -97,9 +94,20 @@
         <entry file="file://$PROJECT_DIR$/dist/LabelLayer.js">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="268">
-              <caret line="4333" column="34" selection-start-line="4333" selection-start-column="30" selection-end-line="4333" selection-end-column="34" />
+              <caret line="4321" column="34" selection-start-line="4333" selection-start-column="30" selection-end-line="4333" selection-end-column="34" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
+                <element signature="n#!!doc" expanded="true" />
+                <marker date="1503117115120" expanded="true" signature="272673:272948" ph="{...}" />
+                <marker date="1503117115120" expanded="true" signature="272704:272784" ph="{...}" />
+                <marker date="1503117115120" expanded="true" signature="272819:272948" ph="[...]" />
+                <marker date="1503117115120" expanded="true" signature="272820:272948" ph="{&quot;key&quot;: 'setNextNode'...}" />
+                <marker date="1503117115120" expanded="true" signature="272896:272944" ph="{...}" />
+                <marker date="1503117115120" expanded="true" signature="301316:301326" ph="{...}" />
+                <marker date="1503117115120" expanded="true" signature="301316:301333" ph="{...}" />
+                <marker date="1503117115120" expanded="true" signature="301316:301338" ph="{&quot;key&quot;: 'scaleOnPoint'...}" />
+                <marker date="1503117115120" expanded="true" signature="301316:301339" ph="[...]" />
+                <marker date="1503117115120" expanded="true" signature="301316:301368" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -757,12 +765,12 @@
       <workItem from="1502934867151" duration="16102000" />
       <workItem from="1502981931840" duration="14130000" />
       <workItem from="1503078943211" duration="15773000" />
-      <workItem from="1503106716443" duration="9979000" />
+      <workItem from="1503106716443" duration="10426000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="95204000" />
+    <option name="totallyTimeSpent" value="95651000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1312" y="52" width="1248" height="1388" extended-state="4" />
@@ -1078,9 +1086,20 @@
     <entry file="file://$PROJECT_DIR$/dist/LabelLayer.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="268">
-          <caret line="4333" column="34" selection-start-line="4333" selection-start-column="30" selection-end-line="4333" selection-end-column="34" />
+          <caret line="4321" column="34" selection-start-line="4333" selection-start-column="30" selection-end-line="4333" selection-end-column="34" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
+            <element signature="n#!!doc" expanded="true" />
+            <marker date="1503117115120" expanded="true" signature="272673:272948" ph="{...}" />
+            <marker date="1503117115120" expanded="true" signature="272704:272784" ph="{...}" />
+            <marker date="1503117115120" expanded="true" signature="272819:272948" ph="[...]" />
+            <marker date="1503117115120" expanded="true" signature="272820:272948" ph="{&quot;key&quot;: 'setNextNode'...}" />
+            <marker date="1503117115120" expanded="true" signature="272896:272944" ph="{...}" />
+            <marker date="1503117115120" expanded="true" signature="301316:301326" ph="{...}" />
+            <marker date="1503117115120" expanded="true" signature="301316:301333" ph="{...}" />
+            <marker date="1503117115120" expanded="true" signature="301316:301338" ph="{&quot;key&quot;: 'scaleOnPoint'...}" />
+            <marker date="1503117115120" expanded="true" signature="301316:301339" ph="[...]" />
+            <marker date="1503117115120" expanded="true" signature="301316:301368" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -1101,8 +1120,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/LabelLayer.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="258">
-          <caret line="443" column="39" selection-start-line="443" selection-start-column="28" selection-end-line="443" selection-end-column="39" />
+        <state relative-caret-position="268">
+          <caret line="480" column="37" selection-start-line="480" selection-start-column="29" selection-end-line="480" selection-end-column="37" />
           <folding />
         </state>
       </provider>
