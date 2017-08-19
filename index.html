@@ -77,38 +77,34 @@
 <body>
 
 <div id="instructions">
-    <strong>Click and drag to spray labels on the screen.</strong>
+    <strong>1. Click and drag to spray labels on the screen.</strong>
     <br/>
-    <strong>Scroll with mouse to zoom in and out.</strong>
+    <strong>2. Scroll with mouse to zoom in and out.</strong>
 </div>
 <div id="docs">
 
     <h1>LabelLayer</h1>
 
-    Fast on-the-fly HTML/CSS label placement with conflict detection.
-    <br/>
-    The layer ensures no labels overlap.
+    Fast on-the-fly HTML/CSS label placement with conflict detection. Labels will not overlap.
     <br/>
     Conflict detection is greedy, based on label priority.
     <br/>
 
     <h2>Why?</h2>
     You can use <em>everything</em> in the HTML/CSS toolkit to structure and style your labels.
-    <br/>
     This is different from libraries that use HTML5-canvas, svg, or WebGL as these technologies and libraries on top of them
     are not as expressive compared to HTML/CSS.
 
 
 
-    <h2>Change label template</h2>
+    <h2>Demo</h2>
+    Change label template here, and spray the results on the screen below.
     <textarea id="template"></textarea>
 
     <h2>API</h2>
     <pre style="font-family: monospace">
-
-        const layer = new LabelLayer(
-            document.getElementById('myNode')//wrapper node
-        );
+        //create LabelLayer
+        const layer = new LabelLayer(document.getElementById('nodeToPlaceLabelsIn'));
 
         //creates a label
         //returns a handle that can then be used for other operations
@@ -131,7 +127,8 @@
         //add label that was removed earlier
         layer.addLabel(labelHandle);
 
-        //ensure label layer fits the container
+        //ensure the LabelLayer instance fits the surrounding div
+        //call this on a resize of the surrounding node.
         layer.resize();
 
         //get the visible layers
@@ -144,6 +141,8 @@
 
     <h2>Download</h2>
     Download <a href="./dist/LabelLayer.js">LabelLayer.js</a>. Include this script to add the <pre>LabelLayer</pre> constructor to the global object.
+    Find source code <a href="https://github.com/thomasneirynck/LabelLayer">here</a>.
+
 
 </div>
 
