@@ -12,9 +12,6 @@ class LinkedListNode {
   setNextNode(linkedListNode) {
     this._nextNode = linkedListNode;
   }
-  // getNextNode() {
-  //   return this._nextNode;
-  // }
 }
 
 const DEFAULT_POSITIONS = [
@@ -364,16 +361,8 @@ class DoublyLinkedListNode {
     this._nextNodeDLL = cell;
   }
 
-  getNextNodeDLL() {
-    return this._nextNodeDLL;
-  }
-
   setPreviousNodeDLL(cell) {
     this._previousNodeDLL = cell;
-  }
-
-  getPreviousNodeDLL() {
-    return this._previousNodeDLL;
   }
 }
 
