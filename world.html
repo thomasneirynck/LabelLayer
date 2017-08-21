@@ -68,11 +68,26 @@
 
 
 <!--<script src="data/cities_10000.js"></script>-->
-<script src="data/cities_trim_small.js"></script>
+<script src="data/cities_50000.js"></script>
+<!--<script src="data/cities_trim_small.js"></script>-->
 <!--<script src="dist/LabelLayer.js"></script>-->
+
 <script src="./LabelLayer.js"></script>
 <script src="lib/RTree2d.js"></script>
 <script>
+
+
+    const arcImage = document.createElement('canvas');
+    const radius = 10;
+    arcImage.width = radius * 2;
+    arcImage.height = radius * 2;
+    const arcContext = arcImage.getContext('2d');
+    arcContext.beginPath();
+    arcContext.arc(radius, radius, radius, 0, Math.PI * 2);
+    arcContext.fillStyle = 'rgba(175,105,105,0.1)';
+    arcContext.fill();
+
+
     const wrapper = document.getElementById('wrapper');
     const canvas = document.createElement('canvas');
     canvas.width = wrapper.clientWidth;
@@ -83,11 +98,12 @@
     wrapper.appendChild(canvas);
     const context2d = canvas.getContext('2d');
 
+//    window.cities.length = 10000;
 
-    window.cities = [
-       ['foo',100,-60, 1],
-//       ['bar',100,-80, 2]
-    ] ;
+    //    window.cities = [
+    //       ['foo',100,-60, 1],
+    //       ['bar',100,-80, 2]
+    //    ] ;
 
     const data = cities.map((c) => {
         return {
@@ -203,8 +219,10 @@
         }
 
         raf = requestAnimationFrame(function draw() {
+
             raf = -1;
 
+            console.log('draw----------------------------');
             //draw cities
             const x = transformation.toWorldX(0);
             const tY = transformation.toWorldY(0);
@@ -214,17 +232,18 @@
 
             const citiesInView = index.search(x, y, toX - x, tY - y);
 
-            console.log(citiesInView.length);
 
             context2d.clearRect(0, 0, canvas.width, canvas.height);
+
             for (let i = 0; i < citiesInView.length; i++) {
                 const city = citiesInView[i];
                 const x = transformation.toViewX(city.x);
                 const y = transformation.toViewY(city.y);
-                context2d.beginPath();
-                context2d.arc(x, y, 10, 0, Math.PI * 2);
-                context2d.fillStyle = 'rgba(175,105,105,0.1)';
-                context2d.fill();
+                context2d.drawImage(arcImage, x - radius, y - radius);
+//                context2d.beginPath();
+//                context2d.arc(x, y, 10, 0, Math.PI * 2);
+//                context2d.fillStyle = 'rgba(175,105,105,0.1)';
+//                context2d.fill();
             }
 
 
@@ -241,23 +260,27 @@
                     });
                 }
             });
-            console.log('draw time', Date.now() - bef);
+            console.log('tot returns', citiesInView.length, 'draw time', Date.now() - bef);
 
 
             context2d.strokeStyle = 'rgba(105,105,105,1)';
-            context2d.globalAlpha = 0.1;
+//            context2d.globalAlpha = 0.1;
 
-            const vis = labelLayer.getVisibleLabels();
-            vis.forEach(function (label) {
+            const visibleLabels = labelLayer.getVisibleLabels();
+
+            console.log('visible labels', visibleLabels.length);
+
+            visibleLabels.forEach(function (label) {
                 const x = label.getX();
                 const y = label.getY();
                 labelLayer.getLabelCenter(label, out);
+                context2d.beginPath();
                 context2d.moveTo(out.x, out.y);
                 context2d.lineTo(x, y);
                 context2d.stroke();
             });
 
-            context2d.globalAlpha = 1;
+//            context2d.globalAlpha = 1;
         });
     }
 

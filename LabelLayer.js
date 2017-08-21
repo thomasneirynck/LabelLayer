@@ -6,7 +6,7 @@ const STATUS = {
 
 class DoublyLinkedListNode {
 
-  static removeFromDoublyLinkedList(cellToRemove) {
+  static removeFromList(cellToRemove) {
     const previousNode = cellToRemove._previousNodeDLL;
     const nextNode = cellToRemove._nextNodeDLL;
     cellToRemove._previousNodeDLL = null;
@@ -28,7 +28,9 @@ class DoublyLinkedListNode {
     }
     //is this a new head?
     if (headLL.getPriority() <= nodeToInsert.getPriority()) {
-      nodeToInsert.setNextNode(headLL);
+      nodeToInsert._previousNodeDLL = null;
+      nodeToInsert._nextNodeDLL = headLL;
+      headLL._previousNodeDLL = nodeToInsert;
       return nodeToInsert;
     }
     //not new head, so anywhere else
@@ -251,8 +253,15 @@ class Label extends DoublyLinkedListNode {
 
     this._domDiv = null;
 
+  }
 
-    this._tmpLabelComp = null;
+
+  isTracked() {
+    return this._tracked;
+  }
+
+  setTracked(value) {
+    this._tracked = value;
   }
 
   removeDomDivReference() {
@@ -372,7 +381,7 @@ class Label extends DoublyLinkedListNode {
 
     for (let i = 0; i < this._cells.length; i++) {
       const cellToRemove = this._cells[i];
-      DoublyLinkedListNode.removeFromDoublyLinkedList(cellToRemove);
+      DoublyLinkedListNode.removeFromList(cellToRemove);
     }
   }
 
@@ -655,7 +664,7 @@ class LabelLayer extends DoublyLinkedListNode {
   }
 
   destroy() {
-    this.setNextNode(null);
+    this.setNextNodeDLL(null);
     window.removeEventListener('resize', this._updateSize);
     this._containerDiv.innerHTML = null;
   }
@@ -705,11 +714,49 @@ class LabelLayer extends DoublyLinkedListNode {
     return visibleLabels;
   }
 
+
+  setLabels(labelIterator) {
+
+
+    //mark stage
+
+    let label = this._nextNodeDLL;
+    while (label) {
+      label.setShouldRemove(true);
+      label = label._nextNodeDLL;
+    }
+
+    labelIterator.forEach((labelConfig) => {
+      let label;
+      if (!labelConfig.labelHandle) {
+        const anchorGenerator = new MultiAnchorGenerator(labelConfig.x, labelConfig.y);
+        label = new Label(this, labelConfig.contents, anchorGenerator);
+        label.setStatus(STATUS.NOT_INITIALIZED);
+        label.setPriority(labelConfig.priority);
+        this._addToAllLabelList(label);
+      } else {
+        //detach from the old linked list and add to the new one
+        // console.log('dont recreate');
+        label = labelConfig.labelHandle;
+        label.setShouldRemove(false);
+        label.dirtyPosition(labelConfig.x, labelConfig.y);
+        if (!label.isTracked()) {
+          this._addToAllLabelList(label);
+        }
+      }
+      return label;
+    });
+
+    this._updateStateOfAllLabels();
+
+
+  }
+
   // setLabels(labelIterator) {
   //
   //   // const newHead = new LinkedListNode();
-  //
   //   let newHead = null;
+  //   let oldHead = this._nextNodeDLL;
   //   labelIterator.forEach((labelConfig) => {
   //     let label;
   //     if (!labelConfig.labelHandle) {
@@ -722,28 +769,30 @@ class LabelLayer extends DoublyLinkedListNode {
   //       // console.log('dont recreate');
   //       label = labelConfig.labelHandle;
   //       label.dirtyPosition(labelConfig.x, labelConfig.y);
+  //       DoublyLinkedListNode.removeFromList(label);
   //     }
-  //     label._nextNode = null;
-  //     newHead = SingleLinkedListNode.addTolinkedList(newHead, label);
+  //     newHead = DoublyLinkedListNode.addToList(newHead, label);
   //     return label;
   //   });
   //
   //
   //   //remove all the left-over nodes
-  //   let nodeToRemove = this._nextNode;
-  //   while (nodeToRemove) {
-  //
-  //     if (nodeToRemove.getStatus() === STATUS.ON_SCREEN) {
-  //       nodeToRemove.setStatus(STATUS.OFF_SCREEN);
-  //       this._labelsToRemoveFromDOM.push(nodeToRemove);
+  //   let labelToRemove = this._nextNodeDLL;
+  //   while (labelToRemove) {
+  //     let nextNode = labelToRemove._nextNodeDLL;
+  //     if (labelToRemove.getStatus() === STATUS.ON_SCREEN) {
+  //       labelToRemove.setStatus(STATUS.OFF_SCREEN);
+  //       this._labelsToRemoveFromDOM.push(labelToRemove);
   //     }
-  //     let next = nodeToRemove._nextNode;
-  //     nodeToRemove.setNextNode(null);
-  //     nodeToRemove = next;
+  //     DoublyLinkedListNode.removeFromList(labelToRemove);
+  //     labelToRemove = nextNode;
   //   }
   //
+  //   this._updateDOM();
+  //
   //   //use the new linked list as the new state
-  //   this.setNextNode(newHead);
+  //   newHead._previousNodeDLL = this;
+  //   this._nextNodeDLL = newHead;
   //
   //   //update the screen
   //   this._updateStateOfAllLabels();
@@ -871,8 +920,10 @@ class LabelLayer extends DoublyLinkedListNode {
       label.unhookAllCells();
 
       if (shouldRemove) {
+        //todo flag as removed
         const nextLabel = label._nextNodeDLL;
         label.setNextNodeDLL(null);
+        label.setTracked(false);
         beforeNode.setNextNodeDLL(nextLabel);
         if (labelStatus === STATUS.ON_SCREEN) {
           label.setStatus(STATUS.OFF_SCREEN);
@@ -976,6 +1027,7 @@ class LabelLayer extends DoublyLinkedListNode {
   _addToAllLabelList(labelToAdd) {
     // const newHead = SingleLinkedListNode.addTolinkedList(this._nextNode, labelToAdd);
     this._nextNodeDLL = DoublyLinkedListNode.addToList(this._nextNodeDLL, labelToAdd);
+    labelToAdd.setTracked(true);
     // this.setNextNode(newHead);
   }
 
