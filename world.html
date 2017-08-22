@@ -67,8 +67,8 @@
 <div id="wrapper"></div>
 
 
-<!--<script src="data/cities_10000.js"></script>-->
-<script src="data/cities_50000.js"></script>
+<script src="data/cities_10000.js"></script>
+<!--<script src="data/cities_50000.js"></script>-->
 <!--<script src="data/cities_trim_small.js"></script>-->
 <!--<script src="dist/LabelLayer.js"></script>-->
 
@@ -269,17 +269,17 @@
             const visibleLabels = labelLayer.getVisibleLabels();
 
             console.log('visible labels', visibleLabels.length);
-
+            context2d.beginPath();
             visibleLabels.forEach(function (label) {
                 const x = label.getX();
                 const y = label.getY();
                 labelLayer.getLabelCenter(label, out);
-                context2d.beginPath();
+
                 context2d.moveTo(out.x, out.y);
                 context2d.lineTo(x, y);
-                context2d.stroke();
-            });
 
+            });
+            context2d.stroke();
 //            context2d.globalAlpha = 1;
         });
     }

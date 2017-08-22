@@ -168,7 +168,18 @@
     <hr>
     بوصة الله
 </div>`
-    ;
+
+
+    const arcImage = document.createElement('canvas');
+    const radius = 10;
+    arcImage.width = radius * 2;
+    arcImage.height = radius * 2;
+    const arcContext = arcImage.getContext('2d');
+    arcContext.beginPath();
+    arcContext.arc(radius, radius, radius, 0, Math.PI * 2);
+    arcContext.fillStyle = 'rgba(175,105,105,0.1)';
+    arcContext.fill();
+
 
     const handlez = [];
     window.handlez = handlez;
@@ -185,33 +196,30 @@
     const out = {x: 0, y: 0};
 
     window.drawGrid = function () {
+
         context.clearRect(0, 0, canvas.width, canvas.height);
-//        labelLayer._drawGrid(context);
-//        context.fillStyle = 'rgba(12,60,123,0.2)';
         context.fillStyle = 'rgba(175,105,105,0.1)';
         window.handlez.forEach(function (label) {
-
             const x = label.getX();
             const y = label.getY();
-            context.beginPath();
-            context.arc(x, y, 10, 0, Math.PI * 2);
-            context.fill();
-
+            context.drawImage(arcImage, x - radius, y - radius);
         });
 
         context.strokeStyle = 'rgba(105,105,105,1)';
-        context.globalAlpha = 0.1;
+//        context.globalAlpha = 0.1;
+        context.beginPath();
         const vis = labelLayer.getVisibleLabels();
         vis.forEach(function (label) {
             const x = label.getX();
             const y = label.getY();
             labelLayer.getLabelCenter(label, out);
+
             context.moveTo(out.x, out.y);
             context.lineTo(x, y);
-            context.stroke();
-        });
 
-        context.globalAlpha = 1;
+        });
+        context.stroke();
+//        context.globalAlpha = 1;
     };
 
 
