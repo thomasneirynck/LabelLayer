@@ -9,7 +9,7 @@ mkdir -p release/labellayer/dist
 
 # cope relevant dirs
 cp LabelLayer.js release/labellayer/LabelLayer.js
-cp index.html release/labellayerindex.html
+cp index.html release/labellayer/index.html
 cp dist/LabelLayer.js release/labellayer/dist/LabelLayer.js
 cp -R data release/labellayer/data
 cp -R lib release/labellayer/data
