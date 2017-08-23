@@ -13,15 +13,21 @@ Vanilla HTML/CSS is significantly more expressive than most libraries that use s
 
 ## API + demo
 
-http://pon
 
 
----------------
 
-# dev
+## Dig in
+
+###  dev
+
+Run this in root and modify source code.
+
     > npm install
     > npm run watch
 
-# release:
-    > webpack
+#### release
+
+Creates a build of all resources under ./release
+
+    > ./release.sh
 

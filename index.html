@@ -116,9 +116,6 @@
         //move label to new position
         layer.moveLabel(labelHandle, newX, newY);
 
-        <!--//change priority of label-->
-        <!--layer.changeLabelPriority(labelHandle, newPriority);-->
-
         //remove label that was created earlier
         layer.removeLabel(labelHandle);
 
@@ -155,18 +152,13 @@
 
 
 <script>
-
-
-
-
     ///////////////////////////////////////////////////////////////////////////
-
     const templateTag = document.getElementById('template');
     templateTag.value =
             `<div class="label">
     <b>Priority</b>: {{priority}}
     <hr>
-    بوصة الله
+<span style="float: right">    كارب ديم</span>
 </div>`
 
 
@@ -206,90 +198,27 @@
         });
 
         context.strokeStyle = 'rgba(105,105,105,1)';
-//        context.globalAlpha = 0.1;
         context.beginPath();
         const vis = labelLayer.getVisibleLabels();
         vis.forEach(function (label) {
             const x = label.getX();
             const y = label.getY();
             labelLayer.getLabelCenter(label, out);
-
             context.moveTo(out.x, out.y);
             context.lineTo(x, y);
-
         });
         context.stroke();
-//        context.globalAlpha = 1;
     };
 
 
     const div = document.getElementById('wrapper');
     const labelLayer = new LabelLayer(div);
 
-    const labels = getLabels();
-
-
-    const handles = labels.map((label)=> {
-        const handle = labelLayer.createLabel(label.x, label.y, label.contents, label.priority);
-        window.handlez.push(handle);
-        return handle;
-    });
-
-
     window.labelLayer = labelLayer;
-    window.handles = handles;
-
-
-    function getLabels() {
-        return [
-//            {
-//                contents: '<div class="label">foo 1</div>',
-//                x: 200,
-//                y: 190,
-//                priority: 4
-//            },
-//            {
-//                contents: '<div class="label">foo 2</div>',
-//                x: 205,
-//                y: 220,
-//                priority: 3
-//            },
-//            {
-//                contents: '<div class="label">foo 3</div>',
-//                x: 200,
-//                y: 80,
-//                priority: 2
-//            },
-//            {
-//                contents: '<div class="label">foo 4</div>',
-//                x: 210,
-//                y: 120,
-//                priority: 1
-//            },
-//            {
-//                contents: '<div style="border: 1px solid red; font-size: 32px; background-color: orange">HEYO!<br/>HELLO!</div>',
-//                x: 280,
-//                y: 250,
-//                priority: 2
-//            },
-//            {
-//                contents: '<div style="border: 1px solid red; font-size: 32px; background-color: orange">I got nothing</div>',
-//                x: 140,
-//                y: 70,
-//                priority: 1
-//            },
-
-
-        ]
-    }
-
-    window._ly = labelLayer;
 
 
     let priority = 0
     let down = false;
-
-    window.moreHandles = handlez;
     wrapper.addEventListener('mousedown', function () {
         down = true;
     });
@@ -331,6 +260,7 @@
     });
 
     window.addEventListener('mousewheel', function (event) {
+        event.preventDefault();
         let cx = event.clientX;
         let cy = event.clientY;
         let count = 5;

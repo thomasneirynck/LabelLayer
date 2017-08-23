@@ -2,4 +2,6 @@
 node_modules/
 *.iml
 dist/
-release.sh
+deploy.sh
+*.tar.gz
+release/
