@@ -11,10 +11,9 @@ Style your labels using <em>everything</em> that HTML/CSS has on offer.
 Vanilla HTML/CSS is significantly more expressive than most libraries that use svg, HTML5-canvas, or WebGL.
 
 
-## API + demo
+## API documentation + demo
 
-
-
+http://labellayer.hepburnave.com
 
 ## Dig in
 
