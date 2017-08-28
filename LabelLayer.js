@@ -1067,4 +1067,5 @@ class LabelLayer extends DoublyLinkedListNode {
 
 }
 
-window.LabelLayer = LabelLayer;
+
+this.LabelLayer = LabelLayer;

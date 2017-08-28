@@ -67,8 +67,8 @@
 <div id="wrapper"></div>
 
 
-<script src="data/cities_10000.js"></script>
-<!--<script src="data/cities_50000.js"></script>-->
+<!--<script src="data/cities_10000.js"></script>-->
+<script src="data/cities_50000.js"></script>
 <!--<script src="data/cities_trim_small.js"></script>-->
 <!--<script src="dist/LabelLayer.js"></script>-->
 
@@ -98,36 +98,76 @@
     wrapper.appendChild(canvas);
     const context2d = canvas.getContext('2d');
 
-//    window.cities.length = 10000;
+    console.log('nr of cities', cities.length);
+//    window.cities.length = 1024;
 
-    //    window.cities = [
-    //       ['foo',100,-60, 1],
-    //       ['bar',100,-80, 2]
-    //    ] ;
-
-    const data = cities.map((c) => {
+    let data = cities.map((c) => {
         return {
             x: c[1],
             y: c[2],
             pop: c[3],
             name: c[0],
-            labelHandle: null
+            labelHandle: null,
+            scale: null
         };
     });
 
 
-    const index = new RTree2d();
+    const stats = data.reduce((acc, c) => {
+        acc.min = Math.min(acc.min, c.pop);
+        acc.max = Math.max(acc.max, c.pop);
+        acc.count++;
+        return acc;
+    }, {
+        min: Infinity,
+        max: -Infinity,
+        count: 0
+    });
+    console.log('stats',stats);
 
+    //sort hi to lo
+    data.sort((a, b) => {
+        return  b.pop - a.pop;
+    });
+
+
+
+
+    const NR_OF_SCALES = 16;
+    const distribution = [];
+    for (let i = NR_OF_SCALES - 1; i >= 0; i--) {
+        const approx = stats.count / Math.pow(2, i);
+        distribution.push(Math.round(approx));
+    }
+
+    console.log('distro', distribution);
+
+    //assign scale
+    let scale = 0;
+    data.forEach((city, i) => {
+        if (i > distribution[0]) {
+            distribution.shift();
+            scale++;
+        }
+        city.scale = scale;
+    });
+
+
+    console.log('scales', data.map(c => c.scale));
+
+
+    const index = new RTree2d();
     const labelLayer = new LabelLayer(wrapper, {autoPaint: false});
 
     data.forEach(function (d) {
         index.insert(d, d.x, d.y, 1, 1);
-//        const label = `<div class="label">${d.name + ": " + d.pop}</div>`;
-//        d.labelHandle = labelLayer.createLabel(d.x, d.y, label, d.pop);
     });
 
 
     const transformation = {
+
+        MIN_SCALE: 1,
+        MAX_SCALE: 1 * Math.pow(2, NR_OF_SCALES),
 
         _sx: 1,
         _sy: -1,
@@ -136,7 +176,7 @@
 
         scaleOnPoint(sx, sy, vX, vY) {
 
-            let nsx = this._sx * sx
+            let nsx = this._sx * sx;
             let wx = this.toWorldX(vX);
             let ntx = vX - (nsx * wx);
 
@@ -145,6 +185,17 @@
             let nsy = this._sy * sy;
             let wy = this.toWorldY(vY);
             let nty = vY - (nsy * wy);
+
+            console.log(nsx, this.MAX_SCALE);
+            if (nsx > this.MAX_SCALE) {
+                console.log('zoomed in too far');
+                return;
+            }
+
+            if (nsx < this.MIN_SCALE) {
+                console.log('zoomed out too far');
+                return;
+            }
 
 
             this._tx = ntx;
@@ -237,26 +288,30 @@
 
             for (let i = 0; i < citiesInView.length; i++) {
                 const city = citiesInView[i];
-                const x = transformation.toViewX(city.x);
-                const y = transformation.toViewY(city.y);
-                context2d.drawImage(arcImage, x - radius, y - radius);
-//                context2d.beginPath();
-//                context2d.arc(x, y, 10, 0, Math.PI * 2);
-//                context2d.fillStyle = 'rgba(175,105,105,0.1)';
-//                context2d.fill();
+                if (city.scale < transformation._sx * 4) {
+                    const x = transformation.toViewX(city.x);
+                    const y = transformation.toViewY(city.y);
+                    context2d.drawImage(arcImage, x - radius, y - radius);
+                }
             }
-
 
             const bef = Date.now();
             labelLayer.setLabels({
                 forEach: function (labelConfigCallback) {
                     citiesInView.forEach(function (city) {
-                        labelConfig.labelHandle = city.labelHandle;
-                        labelConfig.contents = `<div class="label">${city.name + ": " + city.pop}</div>`;
-                        labelConfig.priority = city.pop;
-                        labelConfig.x = transformation.toViewX(city.x);
-                        labelConfig.y = transformation.toViewY(city.y);
-                        city.labelHandle = labelConfigCallback(labelConfig);
+                        if (city.scale < transformation._sx * 2) {
+                            labelConfig.labelHandle = city.labelHandle;
+                            labelConfig.contents = `
+                                    <div class="label" style="font-size:${8 + NR_OF_SCALES - city.scale}px">
+                                        ${city.name}:  ${city.scale}
+                                        <hr/> ${city.pop}
+                                    </div>`
+                            ;
+                            labelConfig.priority = city.pop;
+                            labelConfig.x = transformation.toViewX(city.x);
+                            labelConfig.y = transformation.toViewY(city.y);
+                            city.labelHandle = labelConfigCallback(labelConfig);
+                        }
                     });
                 }
             });
@@ -264,8 +319,6 @@
 
 
             context2d.strokeStyle = 'rgba(105,105,105,1)';
-//            context2d.globalAlpha = 0.1;
-
             const visibleLabels = labelLayer.getVisibleLabels();
 
             console.log('visible labels', visibleLabels.length);
@@ -280,7 +333,6 @@
 
             });
             context2d.stroke();
-//            context2d.globalAlpha = 1;
         });
     }
 
