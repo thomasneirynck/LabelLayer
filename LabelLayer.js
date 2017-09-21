@@ -690,7 +690,19 @@ class LabelLayer extends DoublyLinkedListNode {
 
   createLabel(x, y, htmlContents, priority) {
     const anchorGenerator = new MultiAnchorGenerator(x, y);
+    const labelHandle = new Label(this, htmlContents, anchorGenerator);
+    labelHandle.setPriority(priority);
+    labelHandle.setStatus(STATUS.NOT_INITIALIZED);
+    return labelHandle;
+  }
+
+  createAndAddLabel(x, y, htmlContents, priority) {
+    const anchorGenerator = new MultiAnchorGenerator(x, y);
     return this._createAndAddLabel(htmlContents, priority, anchorGenerator);
+  }
+
+  addLabel(labelHandle) {
+    this._addLabel(labelHandle);
   }
 
   _createAndAddLabel(htmlContents, priority, anchorGenerator) {
@@ -767,53 +779,6 @@ class LabelLayer extends DoublyLinkedListNode {
 
   }
 
-  // setLabels(labelIterator) {
-  //
-  //   // const newHead = new LinkedListNode();
-  //   let newHead = null;
-  //   let oldHead = this._nextNodeDLL;
-  //   labelIterator.forEach((labelConfig) => {
-  //     let label;
-  //     if (!labelConfig.labelHandle) {
-  //       const anchorGenerator = new MultiAnchorGenerator(labelConfig.x, labelConfig.y);
-  //       label = new Label(this, labelConfig.contents, anchorGenerator);
-  //       label.setStatus(STATUS.NOT_INITIALIZED);
-  //       label.setPriority(labelConfig.priority);
-  //     } else {
-  //       //detach from the old linked list and add to the new one
-  //       // console.log('dont recreate');
-  //       label = labelConfig.labelHandle;
-  //       label.dirtyPosition(labelConfig.x, labelConfig.y);
-  //       DoublyLinkedListNode.removeFromList(label);
-  //     }
-  //     newHead = DoublyLinkedListNode.addToList(newHead, label);
-  //     return label;
-  //   });
-  //
-  //
-  //   //remove all the left-over nodes
-  //   let labelToRemove = this._nextNodeDLL;
-  //   while (labelToRemove) {
-  //     let nextNode = labelToRemove._nextNodeDLL;
-  //     if (labelToRemove.getStatus() === STATUS.ON_SCREEN) {
-  //       labelToRemove.setStatus(STATUS.OFF_SCREEN);
-  //       this._labelsToRemoveFromDOM.push(labelToRemove);
-  //     }
-  //     DoublyLinkedListNode.removeFromList(labelToRemove);
-  //     labelToRemove = nextNode;
-  //   }
-  //
-  //   this._updateDOM();
-  //
-  //   //use the new linked list as the new state
-  //   newHead._previousNodeDLL = this;
-  //   this._nextNodeDLL = newHead;
-  //
-  //   //update the screen
-  //   this._updateStateOfAllLabels();
-  //
-  // }
-
   paint() {
     this._updateStateOfAllLabels();
   }
@@ -822,55 +787,6 @@ class LabelLayer extends DoublyLinkedListNode {
     out.x = labelHandle.getViewX() + labelHandle._width / 2;
     out.y = labelHandle.getViewY() + labelHandle._height / 2;
   }
-
-
-  // changeLabelPriority(labelToMove, newPriority) {
-  //
-  //   if (labelToMove.getPriority() === newPriority) {
-  //     return;
-  //   }
-  //
-  //   let previousNode = this;
-  //   let node = previousNode._nextNode;
-  //
-  //   let nodeBeforeTarget = null;
-  //   let nodeToInsertOn = null;
-  //
-  //   while (node) {
-  //
-  //     if (node === labelToMove) {
-  //       nodeBeforeTarget = previousNode;
-  //     }
-  //     const nextNode = node._nextNode;
-  //     const foundInsertionNode = !nodeToInsertOn && (nextNode === null || node.getPriority() <= newPriority);
-  //     if (foundInsertionNode) {
-  //       nodeToInsertOn = previousNode;
-  //     }
-  //
-  //     if (nodeBeforeTarget && nodeToInsertOn) {
-  //       if (labelToMove !== nodeToInsertOn) {
-  //         //remove the node
-  //         const nextAfterTarget = labelToMove._nextNode;
-  //         labelToMove.setNextNode(null);
-  //         nodeBeforeTarget.setNextNode(nextAfterTarget);
-  //
-  //         //and insert into new position
-  //         const next = nodeToInsertOn._nextNode;
-  //         labelToMove.setNextNode(next);
-  //         nodeToInsertOn.setNextNode(labelToMove);
-  //
-  //       }
-  //       break;
-  //     }
-  //
-  //     previousNode = node;
-  //     node = previousNode._nextNode;
-  //
-  //   }
-  //
-  //   labelToMove.setPriority(newPriority);
-  //   this._invalidate();
-  // }
 
   _drawGrid(context) {
     this._gridFront.draw(context);
@@ -1019,7 +935,7 @@ class LabelLayer extends DoublyLinkedListNode {
     let label = this._nextNodeDLL;
     while (label) {
       let thing;
-      if (property) {
+      if (property) { 
         thing = label[property];
       } else {
         thing = label;
@@ -1068,4 +984,4 @@ class LabelLayer extends DoublyLinkedListNode {
 }
 
 
-this.LabelLayer = LabelLayer;
+window.LabelLayer = LabelLayer;

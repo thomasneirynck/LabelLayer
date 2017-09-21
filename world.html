@@ -52,6 +52,13 @@
         font-size: 2em;
     }
 
+    #scale {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        border: 1px solid red;
+    }
+
     #instructions {
         background-color: rgba(240, 240, 240, 0.9);
         position: absolute;
@@ -65,10 +72,11 @@
 <body>
 <!--<div id="docs"><h1>LabelLayer</h1></div>-->
 <div id="wrapper"></div>
-
+<div id="scale"></div>
 
 <!--<script src="data/cities_10000.js"></script>-->
-<script src="data/cities_50000.js"></script>
+<!--<script src="data/cities_50000.js"></script>-->
+<script src="data/cities_138398.js"></script>
 <!--<script src="data/cities_trim_small.js"></script>-->
 <!--<script src="dist/LabelLayer.js"></script>-->
 
@@ -76,9 +84,12 @@
 <script src="lib/RTree2d.js"></script>
 <script>
 
+    const NR_OF_SCALES = 15;
+    const BASE = 2;
+    const STEP = 1;
 
     const arcImage = document.createElement('canvas');
-    const radius = 10;
+    const radius = 8;
     arcImage.width = radius * 2;
     arcImage.height = radius * 2;
     const arcContext = arcImage.getContext('2d');
@@ -99,7 +110,8 @@
     const context2d = canvas.getContext('2d');
 
     console.log('nr of cities', cities.length);
-//    window.cities.length = 1024;
+
+    //    window.cities.length = 1024;
 
     let data = cities.map((c) => {
         return {
@@ -123,31 +135,53 @@
         max: -Infinity,
         count: 0
     });
-    console.log('stats',stats);
+    console.log('stats', stats);
 
     //sort hi to lo
     data.sort((a, b) => {
-        return  b.pop - a.pop;
+        return b.pop - a.pop;
     });
 
 
+    const SCALE_MAP = [
+        0,//0
+        0,//1
+        0,//2
+        1,//3
+        2,//4
+        6,//5
+        7,//6
+        8,//7
+        9,//8
+        10,//9
+        13,//10
+        15,//11
+        18,//12
+        22,//13
+        24,//14
+        26,//15
+    ];
 
 
-    const NR_OF_SCALES = 16;
     const distribution = [];
     for (let i = NR_OF_SCALES - 1; i >= 0; i--) {
-        const approx = stats.count / Math.pow(2, i);
+        const approx = stats.count / Math.pow(BASE * STEP, i);
         distribution.push(Math.round(approx));
     }
 
     console.log('distro', distribution);
 
     //assign scale
-    let scale = 0;
-    data.forEach((city, i) => {
-        if (i > distribution[0]) {
-            distribution.shift();
-            scale++;
+
+
+    data.forEach((city, index) => {
+        let scale = 0;
+        for (let i = 0; i < distribution.length; i++) {
+            if (index <= distribution[i]) {
+                break;
+            } else {
+                scale++;
+            }
         }
         city.scale = scale;
     });
@@ -167,7 +201,7 @@
     const transformation = {
 
         MIN_SCALE: 1,
-        MAX_SCALE: 1 * Math.pow(2, NR_OF_SCALES),
+        MAX_SCALE: 1 * Math.pow(BASE * STEP, NR_OF_SCALES),
 
         _sx: 1,
         _sy: -1,
@@ -186,7 +220,6 @@
             let wy = this.toWorldY(vY);
             let nty = vY - (nsy * wy);
 
-            console.log(nsx, this.MAX_SCALE);
             if (nsx > this.MAX_SCALE) {
                 console.log('zoomed in too far');
                 return;
@@ -282,40 +315,47 @@
 
 
             const citiesInView = index.search(x, y, toX - x, tY - y);
+            const citiesInScale = citiesInView.filter((city) => {
+                const mapScale = SCALE_MAP[city.scale];
+                if (typeof mapScale !== 'number') {
+                    return false;
+                }
+                return (mapScale < transformation._sx);
+            });
 
 
             context2d.clearRect(0, 0, canvas.width, canvas.height);
 
-            for (let i = 0; i < citiesInView.length; i++) {
-                const city = citiesInView[i];
-                if (city.scale < transformation._sx * 4) {
-                    const x = transformation.toViewX(city.x);
-                    const y = transformation.toViewY(city.y);
-                    context2d.drawImage(arcImage, x - radius, y - radius);
-                }
-            }
+
+            citiesInScale.forEach(function (city) {
+                const x = transformation.toViewX(city.x);
+                const y = transformation.toViewY(city.y);
+                context2d.drawImage(arcImage, x - radius, y - radius);
+
+            });
+
 
             const bef = Date.now();
             labelLayer.setLabels({
                 forEach: function (labelConfigCallback) {
-                    citiesInView.forEach(function (city) {
-                        if (city.scale < transformation._sx * 2) {
-                            labelConfig.labelHandle = city.labelHandle;
-                            labelConfig.contents = `
+                    citiesInScale.forEach(function (city) {
+
+                        labelConfig.labelHandle = city.labelHandle;
+                        labelConfig.contents = `
                                     <div class="label" style="font-size:${8 + NR_OF_SCALES - city.scale}px">
                                         ${city.name}:  ${city.scale}
                                         <hr/> ${city.pop}
                                     </div>`
-                            ;
-                            labelConfig.priority = city.pop;
-                            labelConfig.x = transformation.toViewX(city.x);
-                            labelConfig.y = transformation.toViewY(city.y);
-                            city.labelHandle = labelConfigCallback(labelConfig);
-                        }
+                        ;
+                        labelConfig.priority = city.pop;
+                        labelConfig.x = transformation.toViewX(city.x);
+                        labelConfig.y = transformation.toViewY(city.y);
+                        city.labelHandle = labelConfigCallback(labelConfig);
+
                     });
                 }
             });
-            console.log('tot returns', citiesInView.length, 'draw time', Date.now() - bef);
+            console.log('tot returns', citiesInScale.length, 'draw time', Date.now() - bef);
 
 
             context2d.strokeStyle = 'rgba(105,105,105,1)';
@@ -333,6 +373,8 @@
 
             });
             context2d.stroke();
+
+            document.getElementById('scale').innerHTML = 'Scale: ' + transformation._sx + " - " + citiesInScale.length;
         });
     }
 
