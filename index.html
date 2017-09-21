@@ -21,6 +21,9 @@
             /*height: 256px;*/
             /*border: 1px solid red;*/
             user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-user-select: none;
             overflow: hidden;
         }
 
@@ -51,6 +54,9 @@
             display: inline-block;
             overflow: auto;
             user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-user-select: none;
         }
 
         #template {
@@ -286,13 +292,27 @@
         canvas.height = wrapper.clientHeight;
     });
 
-    window.addEventListener('mousewheel', function (event) {
+
+    window.addEventListener('DOMMouseScroll', onScroll);
+
+    window.addEventListener('mousewheel', onScroll);
+
+    function onScroll(event) {
         event.preventDefault();
         let cx = event.clientX;
         let cy = event.clientY;
         let count = 5;
         let size = 1.01;
-        let thing = event.wheelDelta >= 0 ? size : 1 / size;
+
+
+        let zoomIn = true;
+        if (typeof event.wheelDelta === 'number') {
+            zoomIn = event.wheelDelta >= 0;
+        } else {
+            zoomIn = event.detail <= 0;
+        }
+
+        let thing = zoomIn ? size : 1 / size;
         requestAnimationFrame(function zoom() {
             labelLayer.scaleOnPoint(thing, thing, cx, cy);
             if (count > 0) {
@@ -300,7 +320,7 @@
             }
             count--;
         });
-    });
+    }
 
 </script>
 
