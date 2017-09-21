@@ -139,9 +139,6 @@
         //get the visible layers
         const visibleLayer = layer.getVisibleLabels();
 
-        //set all labels
-
-
         //destroy the layer
         layer.destroy();
 
@@ -213,7 +210,7 @@
 
     const out = {x: 0, y: 0};
 
-    window.drawGrid = function () {
+    window.drawScene = function () {
 
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = 'rgba(175,105,105,0.1)';
@@ -225,6 +222,7 @@
 
         context.strokeStyle = 'rgba(105,105,105,1)';
         context.beginPath();
+        labelLayer.paint();
         const vis = labelLayer.getVisibleLabels();
         vis.forEach(function (label) {
             const x = label.getX();
@@ -238,12 +236,14 @@
 
 
     const div = document.getElementById('wrapper');
-    const labelLayer = new LabelLayer(div);
+    const labelLayer = new LabelLayer(div, {
+            autoPaint: false
+    });
 
     window.labelLayer = labelLayer;
 
 
-    let priority = 0
+    let priority = 0;
     let down = false;
     wrapper.addEventListener('mousedown', function () {
         down = true;
@@ -278,7 +278,7 @@
     });
 
     requestAnimationFrame(function draw() {
-        drawGrid();
+        drawScene();
         requestAnimationFrame(draw);
     });
     window.addEventListener('resize', function () {
